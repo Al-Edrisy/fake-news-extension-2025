@@ -1,135 +1,197 @@
-# Turborepo starter
+# Fake News Checker Monorepo
 
-This Turborepo starter is maintained by the Turborepo core team.
+## Overview
 
-## Using this example
+This repository is a monorepo for the Fake News Checker project, managed with [Turborepo](https://turborepo.com/) and using both Node.js (frontend, extension, shared packages) and Python (backend). The project aims to provide a robust system for detecting, analyzing, and reporting fake news, with both a browser extension and a web interface.
 
-Run the following command:
+---
 
-```sh
-npx create-turbo@latest
-```
-
-## What's inside?
-
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
+## Monorepo Structure
 
 ```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+apps/
+  fake-news-cheeker/      # Python backend (API, analysis, scraping)
+  fake-news-extension/    # Browser extension (user interface)
+  web/                    # System website (user interface)
+  docs/                   # Documentation site
+packages/
+  eslint-config/          # Shared ESLint config
+  typescript-config/      # Shared TypeScript config
+  ui/                     # Shared React UI components
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+---
+
+## Main Components
+
+### 1. Backend: `apps/fake-news-cheeker`
+- **Language:** Python
+- **Purpose:** Provides the core API, fake news analysis, claim verification, and web scraping.
+- **Structure:**
+  - `ai/` — AI/ML clients
+  - `algorithms/` — Analysis algorithms
+  - `controllers/` — API controllers
+  - `core/` — Error handling, exceptions
+  - `models/` — Data models
+  - `routes/` — API routes
+  - `scrapers/` — News/content scrapers
+  - `services/` — Business logic
+  - `utils/` — Utilities
+  - `validators/` — Input validation
+- **Entry Point:** `main.py`
+
+### 2. Browser Extension: `apps/fake-news-extension`
+- **Language:** TypeScript, React
+- **Purpose:** User-facing browser extension for checking news credibility directly on web pages.
+- **Structure:**
+  - `src/` — Main source code (components, hooks, pages, popup, options)
+  - `public/` — Static assets
+  - `index.html`, `options.html`, `popup.html` — Extension entry points
+- **Build Tool:** Vite
+
+### 3. Web App: `apps/web`
+- **Language:** TypeScript, React, Next.js
+- **Purpose:** System website for users to interact with the Fake News Checker platform.
+- **Structure:**
+  - `app/` — Next.js app directory
+  - `public/` — Static assets
+
+### 4. Documentation: `apps/docs`
+- **Language:** TypeScript, Next.js
+- **Purpose:** Project documentation site.
+
+### 5. Shared Packages: `packages/`
+- `ui/` — Shared React UI components
+- `eslint-config/` — Shared ESLint config
+- `typescript-config/` — Shared TypeScript config
+
+---
+
+## Technologies Used
+- **Monorepo Management:** Turborepo
+- **Frontend:** React, Next.js, Vite, TypeScript
+- **Backend:** Python
+- **Package Management:** npm
+
+---
+
+## Architecture Diagram (Text)
 
 ```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+[Browser Extension] <----> [Backend API (Python)] <----> [Scrapers, AI, DB]
+        |                        ^
+        v                        |
+   [Web App (Next.js)] ----------
 ```
+- Both the browser extension and the web app communicate with the Python backend API.
+- The backend handles analysis, claim verification, and scraping.
 
-### Develop
+---
 
-To develop all apps and packages, run the following command:
+## Getting Started
 
-```
-cd my-turborepo
+1. **Install dependencies:**
+   ```sh
+   npm install
+   ```
+2. **Build all apps/packages:**
+   ```sh
+   npx turbo build
+   ```
+3. **Develop:**
+   ```sh
+   npx turbo dev
+   ```
+4. **Run backend (Python):**
+   ```sh
+   cd apps/fake-news-cheeker
+   # (activate venv if needed)
+   python main.py
+   ```
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+---
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
+## License & Usage Policy
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+- **All Rights Reserved.**
+- Use, copying, or distribution is strictly prohibited without explicit written permission from the owner (SALIH OTMAN, Al-Edrisy, 2025).
+- See `LICENSE` and `POLICY.md` for details.
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+---
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+## Contributions
 
-### Remote Caching
+- Contributions are welcome but require explicit approval from the repository owner.
+- Please open an issue or contact the owner before submitting a pull request.
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+---
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+## 1. Syncing Theme Between Website and Extension
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+**Goal:**  
+If a user changes the theme (e.g., light/dark mode) on the website, the browser extension should also update its theme, and vice versa. You also want the theme to respect the system (OS/browser) preference.
 
-```
-cd my-turborepo
+---
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
+### Is it Possible?
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
+**Yes, but with some caveats:**
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+- **Browser Extension and Website are Separate Contexts:**  
+  They run in different environments (the extension is isolated from the website for security reasons).
+- **Direct Sync is Not Automatic:**  
+  You need to implement a way for them to communicate or share settings.
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+---
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
+### How Can You Achieve This?
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
+#### 1. **Shared Backend (Best for Authenticated Users)**
+- Store the user’s theme preference in your backend (e.g., in a user profile).
+- Both the website and extension fetch and update the theme setting from the backend.
+- When the user changes the theme in one, it updates the backend, and the other can fetch the new value.
 
-## Useful Links
+#### 2. **Browser Storage Sync (For Extensions)**
+- Chrome/Edge/Firefox extensions can use `chrome.storage.sync` to store settings that sync across browsers where the user is logged in.
+- The website can communicate with the extension via [postMessage](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage) or by injecting a content script, but this is more complex and less robust than a backend.
 
-Learn more about the power of Turborepo:
+#### 3. **System Theme Detection**
+- Both the website and extension can detect the system theme using CSS media queries:
+  ```js
+  window.matchMedia('(prefers-color-scheme: dark)').matches
+  ```
+- You can default to the system theme and allow the user to override it.
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+#### 4. **Manual Sync (Not Recommended)**
+- Ask the user to set the theme in both places. Not user-friendly.
+
+---
+
+### Recommended Approach
+
+**For the best user experience:**
+- Use the backend to store the user’s theme preference (if logged in).
+- Both the website and extension should:
+  - Check the backend for the user’s theme preference.
+  - Fall back to system theme if no preference is set.
+  - Allow the user to change the theme in either place, and update the backend.
+- For unauthenticated users, use system theme and local storage.
+
+---
+
+## 2. “Backup the Contents of That in the Setting Section”
+
+If you mean “let the user export or backup their settings (including theme)”, you can:
+- Provide an export/import button in the settings page of both the website and extension.
+- This can export settings as a JSON file.
+
+---
+
+## 3. Implementation Example
+
+Would you like a code example for:
+- Syncing theme between website and extension via backend?
+- Detecting and applying system theme?
+- Exporting/importing settings?
+
+Let me know which part you want to see in detail, and I’ll provide the code!
