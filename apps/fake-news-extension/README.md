@@ -1,73 +1,112 @@
-# Welcome to your Lovable project
+# VeriNews - Fake News Detection Browser Extension
 
-## Project info
+A Chrome extension that helps users verify news claims and detect fake news using AI-powered analysis.
 
-**URL**: https://lovable.dev/projects/690cf3fd-1315-43ea-8b0f-ade10f4b04a7
+## Features
 
-## How can I edit this code?
+- **Real-time News Verification**: Analyze news articles and claims directly from web pages
+- **AI-Powered Analysis**: Uses advanced AI models to detect fake news patterns
+- **Floating Verify Button**: Quick verification with text selection
+- **Professional UI**: Modern, responsive interface with theme support
+- **Context Menu Integration**: Right-click to verify selected text
+- **Notification System**: Audio feedback for verification results
 
-There are several ways of editing your application.
+## Installation
 
-**Use Lovable**
+### Development Setup
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/690cf3fd-1315-43ea-8b0f-ade10f4b04a7) and start prompting.
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Al-Edrisy/fake-news-extension-2025.git
+   cd news_cheeker/apps/fake-news-extension
+   ```
 
-Changes made via Lovable will be committed automatically to this repo.
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-**Use your preferred IDE**
+3. **Build the extension**
+   ```bash
+   npm run build
+   ```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+4. **Load in Chrome**
+   - Open Chrome and go to `chrome://extensions/`
+   - Enable "Developer mode"
+   - Click "Load unpacked"
+   - Select the `dist` folder from the build output
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Usage
 
-Follow these steps:
+1. **Text Selection**: Select any text on a webpage and click the floating "Verify" button
+2. **Context Menu**: Right-click on selected text and choose "Verify with VeriNews"
+3. **Popup Interface**: View detailed analysis results in the extension popup
+4. **Settings**: Access extension options through the extension menu
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## Technology Stack
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+- **Frontend**: React, TypeScript, Vite
+- **UI Components**: shadcn/ui, Tailwind CSS
+- **Extension**: Chrome Extension Manifest V3
+- **Build Tool**: Vite with extension-specific configuration
 
-# Step 3: Install the necessary dependencies.
-npm i
+## Project Structure
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+src/
+├── components/          # React components
+│   ├── ui/             # shadcn/ui components
+│   ├── AdminDashboard.tsx
+│   ├── AdminLogin.tsx
+│   └── Navbar.tsx
+├── pages/              # Extension pages
+│   ├── Admin.tsx
+│   ├── Docs.tsx
+│   ├── Index.tsx
+│   └── Services.tsx
+├── popup/              # Extension popup
+├── options/            # Extension options page
+├── hooks/              # Custom React hooks
+├── lib/                # Utility functions
+└── main.tsx           # Main entry point
+
+public/
+├── background.js       # Background script
+├── content.js         # Content script
+├── manifest.json      # Extension manifest
+└── notification.mp3   # Audio feedback
 ```
 
-**Edit a file directly in GitHub**
+## Development
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Available Scripts
 
-**Use GitHub Codespaces**
+- `npm run dev` - Start development server with hot reload
+- `npm run build` - Build extension for production
+- `npm run preview` - Preview the built extension
+- `npm run lint` - Run ESLint
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Building for Production
 
-## What technologies are used for this project?
+```bash
+npm run build
+```
 
-This project is built with:
+The built extension will be in the `dist/` folder, ready to be loaded into Chrome.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Contributing
 
-## How can I deploy this project?
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-Simply open [Lovable](https://lovable.dev/projects/690cf3fd-1315-43ea-8b0f-ade10f4b04a7) and click on Share -> Publish.
+## License
 
-## Can I connect a custom domain to my Lovable project?
+All Rights Reserved. Use, copying, or distribution is strictly prohibited without explicit written permission from the owner (SALIH OTMAN, Al-Edrisy, 2025).
 
-Yes, you can!
+## Support
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+For issues and feature requests, please open an issue on the GitHub repository.
