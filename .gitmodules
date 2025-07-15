@@ -1,0 +1,3 @@
+[submodule "apps/fake-news-extension"]
+	path = apps/fake-news-extension
+	url = https://github.com/Al-Edrisy/fake-news-extension-2025.git

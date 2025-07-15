@@ -1,0 +1,14 @@
+{
+  "name": "fake-news-backend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "chmod +x start-dev.sh && ./start-dev.sh",
+    "start": "source venv/bin/activate && python3 main.py",
+    "install-deps": "python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt",
+    "build": "echo 'Python backend - no build step required'",
+    "lint": "echo 'Python backend - linting not configured'"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+} 

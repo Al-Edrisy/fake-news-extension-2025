@@ -1,0 +1,328 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+ :root {
+    /* Light mode colors */
+    --background: 0 0% 100%;
+    --foreground: 217 84% 15%;
+    --surface: 218 35% 97%;
+    --primary: 348 85% 60%;
+    --secondary: 345 100% 57%;
+    --accent: 73 55% 67%;
+    --muted-text: 217 66% 33%;
+    --primary-text: 217 84% 15%;
+    --success: 107 41% 81%;
+    --info: 217 66% 33%;
+    --warning: 37 94% 52%;
+    --error: 348 60% 45%;
+    --border: 220 22% 92%;
+    --shadow: 0 0% 0%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 217 84% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 217 84% 15%;
+    --primary-foreground: 0 0% 100%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 220 22% 92%;
+    --muted-foreground: 217 66% 33%;
+    --accent-foreground: 217 84% 15%;
+    --destructive: 348 60% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --input: 220 22% 92%;
+    --ring: 217 84% 15%;
+    --radius: 0.5rem;
+
+    --sidebar-background: 218 35% 97%;
+    --sidebar-foreground: 217 84% 15%;
+    --sidebar-primary: 217 84% 15%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 22% 92%;
+    --sidebar-accent-foreground: 217 84% 15%;
+    --sidebar-border: 220 22% 92%;
+    --sidebar-ring: 217 84% 15%;
+  }
+
+  .dark {
+    /* Dark mode colors */
+    --background: 217 100% 15%;
+    --foreground: 0 0% 100%;
+    --surface: 216 79% 19%;
+    --primary: 348 85% 60%;
+    --secondary: 345 100% 57%;
+    --accent: 73 55% 67%;
+    --muted-text: 228 35% 84%;
+    --primary-text: 0 0% 100%;
+    --success: 107 41% 81%;
+    --info: 217 66% 33%;
+    --warning: 37 94% 65%;
+    --error: 348 70% 50%;
+    --border: 217 44% 37%;
+    --shadow: 0 0% 0%;
+
+    --card: 216 79% 19%;
+    --card-foreground: 0 0% 100%;
+    --popover: 216 79% 19%;
+    --popover-foreground: 0 0% 100%;
+    --primary-foreground: 0 0% 100%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 217 44% 37%;
+    --muted-foreground: 228 35% 84%;
+    --accent-foreground: 217 84% 15%;
+    --destructive: 348 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --input: 217 44% 37%;
+    --ring: 0 0% 100%;
+
+    --sidebar-background: 216 79% 19%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 348 85% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 44% 37%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 217 44% 37%;
+    --sidebar-ring: 348 85% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom theme classes */
+.text-primary-text {
+  color: hsl(var(--primary-text));
+}
+
+.text-muted-text {
+  color: hsl(var(--muted-text));
+}
+
+.bg-surface {
+  background-color: hsl(var(--surface));
+}
+
+.bg-success {
+  background-color: hsl(var(--success));
+}
+
+.bg-info {
+  background-color: hsl(var(--info));
+} 
+
+.bg-warning {
+  background-color: hsl(var(--warning));
+}
+
+.bg-error {
+  background-color: hsl(var(--error));
+}
+
+.text-error {
+  color: hsl(var(--error));
+}
+
+.border-border {
+  border-color: hsl(var(--border));
+}
+
+.dark .text-primary-text {
+  color: hsl(var(--primary-text));
+}
+
+.dark .text-muted-text {
+  color: hsl(var(--muted-text));
+}
+
+.dark .bg-surface {
+  background-color: hsl(var(--surface));
+}
+
+/* Professional Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes bounce {
+  0%, 20%, 53%, 80%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  40%, 43% {
+    transform: translate3d(0, -30px, 0);
+  }
+  70% {
+    transform: translate3d(0, -15px, 0);
+  }
+  90% {
+    transform: translate3d(0, -4px, 0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+/* Animation Classes */
+.animate-fadeInUp {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.animate-fadeInLeft {
+  animation: fadeInLeft 0.6s ease-out;
+}
+
+.animate-fadeInRight {
+  animation: fadeInRight 0.6s ease-out;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.5s ease-out;
+}
+
+.animate-slideInUp {
+  animation: slideInUp 0.8s ease-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-bounce {
+  animation: bounce 1s infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Hover Effects */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.hover-glow {
+  transition: box-shadow 0.3s ease;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+/* Grid Background Pattern */
+.bg-grid-slate-100 {
+  background-image: linear-gradient(to right, #f1f5f9 1px, transparent 1px),
+    linear-gradient(to bottom, #f1f5f9 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.dark .bg-grid-slate-700\/25 {
+  background-image: linear-gradient(to right, rgba(51, 65, 85, 0.25) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(51, 65, 85, 0.25) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Loading States */
+.loading-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.dark .loading-skeleton {
+  background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
