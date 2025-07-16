@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 from readability import Document as ReadabilityDocument
 from typing import List, Optional
+from langdetect import detect, LangDetectException
 
 # Load environment variables
 load_dotenv()
@@ -159,6 +160,9 @@ class NewsScraper:
     def extract_article_content(self) -> str:
         try:
             html = self.page.content()
+            # Ensure html is str and UTF-8 decoded
+            if isinstance(html, bytes):
+                html = html.decode('utf-8', errors='replace')
             doc = ReadabilityDocument(html)
             content_html = doc.summary()
 
@@ -182,27 +186,46 @@ class NewsScraper:
             text = re.sub(r'\n\s*\n', '\n\n', text)
             text = re.sub(r'[ \t]+', ' ', text).strip()
 
+            # Log if Arabic text is detected
+            import re as _re
+            if _re.search(r'[\u0600-\u06FF]', text):
+                logger.info(f"[ARABIC] Extracted content: {text[:500]}")
+
             return text
         except Exception as e:
             logger.error(f"Error extracting article content: {e}")
             return ""
 
 
-def google_search_by_query(query: str, max_results: int = 5, lang: str = "lang_en") -> List[str]:
+def google_search_by_query(query: str, max_results: int = 5) -> List[str]:
     if not (GOOGLE_API_KEY and GOOGLE_CX):
         raise RuntimeError("Set GOOGLE_API_KEY and GOOGLE_CX in .env")
 
     try:
+        try:
+            lang = detect(query)
+            logger.info(f"[LANGDETECT] Detected language: {lang} for query: {query}")
+        except LangDetectException:
+            lang = 'en'
+            logger.warning(f"[LANGDETECT] Could not detect language for query: {query}. Defaulting to English.")
+        lr_param = f"lang_{lang}" if lang in ["ar", "en", "fr", "es"] else None  # Add more as needed
+        if lr_param:
+            logger.info(f"[SEARCH] Using language restrict parameter: {lr_param}")
+        else:
+            logger.info(f"[SEARCH] No language restrict parameter used for lang: {lang}")
+
+        params = {
+            "key": GOOGLE_API_KEY,
+            "cx": GOOGLE_CX,
+            "q": query,
+            "num": max_results,
+        }
+        if lr_param:
+            params["lr"] = lr_param
+
         resp = requests.get(
             "https://www.googleapis.com/customsearch/v1",
-            params={
-                "key": GOOGLE_API_KEY,
-                "cx": GOOGLE_CX,
-                "q": query,
-                "num": max_results,
-                "lr": lang,
-                "safe": "active"
-            },
+            params=params,
             timeout=15
         )
         resp.raise_for_status()

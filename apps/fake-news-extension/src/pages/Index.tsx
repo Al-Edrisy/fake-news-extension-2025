@@ -14,7 +14,7 @@ const Index = () => {
         <div className="max-w-4xl mx-auto text-center space-y-4">
           <div className="inline-flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-full text-primary font-medium text-sm">
             <Shield className="h-3 w-3" />
-            Chrome Extension & PWA
+            Chrome Extension & Desktop App
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold text-primary-text leading-tight">
             Combat Fake News with
@@ -122,7 +122,7 @@ const Index = () => {
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-3">
                   <Smartphone className="h-8 w-8 text-secondary" />
-                  <CardTitle className="text-primary-text text-lg">Desktop App (PWA)</CardTitle>
+                  <CardTitle className="text-primary-text text-lg">Desktop App</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">

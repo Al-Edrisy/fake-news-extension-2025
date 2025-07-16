@@ -13,6 +13,8 @@ Today's date is {CURRENT_DATE}.
 
 You are an expert fact-checking analyst. Your task is to evaluate the following claim using the provided article. Consider the context and category of the article, and determine whether the article supports, refutes, partially supports, or does not address the claim.
 
+Note: The claim and article may be in any language, including Arabic. Respond in the same language as the claim if possible.
+
 Instructions:
 - Carefully read the claim and the article.
 - Assess if the article is relevant to the claim.
@@ -30,7 +32,7 @@ Your response MUST be ONLY the following JSON structure, with no extra text, mar
   "relevant": boolean,                // Is the article relevant to the claim?
   "support": "True"|"False"|"Partial"|"Unknown", // Level of support
   "confidence": integer,              // 0-100
-  "reason": "string",                 // Brief explanation (1-2 sentences)
+  "reason": "string",                 // Brief explanation (1-2 sentences), depending on the language of the claim, arabic, Turkish, French, English, etc
   "authoritative": boolean            // Is the source authoritative?
 }}
 """
@@ -39,6 +41,12 @@ Your response MUST be ONLY the following JSON structure, with no extra text, mar
         self.ai_client = DeepSeekClient()
 
     def analyze_source(self, claim: str, article: Dict) -> Dict:
+        import re
+        # Log claim and article content if claim contains Arabic characters
+        if re.search(r'[\u0600-\u06FF]', claim):
+            logger.info(f"[ARABIC] Claim: {claim}")
+            logger.info(f"[ARABIC] Article Title: {article.get('title', '')}")
+            logger.info(f"[ARABIC] Article Content: {article.get('content', '')[:500]}")
         prompt = self._build_analysis_prompt(claim, article)
         try:
             raw_response = self.ai_client.ask(prompt, system_prompt=self.SYSTEM_PROMPT)
@@ -167,6 +175,10 @@ Your response MUST be ONLY the following JSON structure, with no extra text, mar
         support_map = {"True": 1.0, "Partial": 0.5, "False": 0.0, "Unknown": 0.0}
         scores = [support_map.get(s["support"], 0.0) for s in sources]
         confs = [s["confidence"] for s in sources]
+
+        # PATCH: Handle empty or zero weights robustly
+        if not weights or sum(weights) == 0:
+            return "Uncertain", 0.0
 
         weighted_support = np.average(scores, weights=weights)
         weighted_confidence = np.average(confs, weights=weights)

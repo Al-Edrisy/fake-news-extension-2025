@@ -29,12 +29,12 @@ class GoogleSearchService:
                 del self.cache[key]
             self.last_cleaned = current_time
 
-    def search(self, query: str, max_results: int = 3, lang: str = "lang_en") -> List[Dict]:
+    def search(self, query: str, max_results: int = 3, lang: str = None) -> List[Dict]:
         if not (GOOGLE_API_KEY and GOOGLE_CX):
             raise RuntimeError("GOOGLE_API_KEY and GOOGLE_CX must be set in .env")
 
         # Check cache first
-        cache_key = f"{query}-{max_results}-{lang}"
+        cache_key = f"{query}-{max_results}-{lang or 'auto'}"
         self._clean_cache()
 
         if cache_key in self.cache:
@@ -73,21 +73,23 @@ class GoogleSearchService:
             logger.error(f"Google Search API error: {e}")
             return []
 
-    def _search_page(self, query: str, num: int, lang: str, page: int = 1) -> List[Dict]:
+    def _search_page(self, query: str, num: int, lang: str = None, page: int = 1) -> List[Dict]:
         """Search a single page of results"""
         try:
+            params = {
+                "key": GOOGLE_API_KEY,
+                "cx": GOOGLE_CX,
+                "q": query,
+                "num": num,
+                "start": (page - 1) * 10 + 1,
+                "safe": "active"
+            }
+            if lang:
+                params["lr"] = lang
             response = requests.get(
                 "https://www.googleapis.com/customsearch/v1",
-                params={
-                    "key": GOOGLE_API_KEY,
-                    "cx": GOOGLE_CX,
-                    "q": query,
-                    "num": num,
-                    "start": (page - 1) * 10 + 1,
-                    "lr": lang,
-                    "safe": "active"
-                },
-                timeout=5  # Short timeout
+                params=params,
+                timeout=5
             )
             response.raise_for_status()
             print("GOOGLE API RAW RESPONSE:", response.text)

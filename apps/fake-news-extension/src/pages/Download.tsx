@@ -49,9 +49,9 @@ const Download = () => {
   const platforms = [
     {
       id: "pwa",
-      name: "Progressive Web App",
+      name: "Desktop App",
       icon: Smartphone,
-      description: "Install as a native app on your device",
+      description: "Install as a desktop app on your device",
       badge: "Recommended",
       color: "primary"
     },
@@ -85,8 +85,8 @@ const Download = () => {
     pwa: [
       {
         step: 1,
-        title: "Open the Web App",
-        description: "Navigate to the VeriNews web application in your browser",
+        title: "Open the Desktop App Page",
+        description: "Navigate to the VeriNews desktop app page in your browser",
         code: "http://localhost:5173/",
         icon: Globe
       },
@@ -94,21 +94,21 @@ const Download = () => {
         step: 2,
         title: "Click Install",
         description: "Look for the install button in your browser's address bar or menu",
-        code: "Click 'Install' or 'Add to Home Screen'",
+        code: "Click 'Install' or 'Add to Desktop'",
         icon: DownloadIcon
       },
       {
         step: 3,
         title: "Confirm Installation",
-        description: "Follow the prompts to install the PWA on your device",
+        description: "Follow the prompts to install the Desktop App on your device",
         code: "Confirm the installation in the popup dialog",
         icon: CheckCircle
       },
       {
         step: 4,
-        title: "Launch from Home Screen",
-        description: "The app will now appear on your home screen like a native app",
-        code: "Tap the VeriNews icon to launch",
+        title: "Launch from Desktop",
+        description: "The app will now appear on your desktop like a native app",
+        code: "Double-click the VeriNews icon to launch",
         icon: Play
       }
     ],
