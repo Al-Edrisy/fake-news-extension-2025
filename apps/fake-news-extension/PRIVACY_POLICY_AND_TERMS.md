@@ -172,21 +172,23 @@ We may update these terms from time to time. Continued use of the service consti
 The VeriNews extension requests the following permissions:
 
 #### 4.1.1 Required Permissions
-- **activeTab**: To access the currently active tab for text selection
+- **activeTab**: To access the currently active tab for text selection when user interacts with the extension
 - **storage**: To save user preferences and settings
 - **contextMenus**: To provide right-click context menu options
 - **notifications**: To display verification results and alerts
+- **scripting**: To inject content scripts dynamically when needed
 
 #### 4.1.2 Host Permissions
-- **http://localhost:5000/***: To connect to the backend API for verification
-- **http://13.60.241.86:5000/***: To connect to the production backend API
+- **http://localhost:5000/***: To connect to the backend API for verification (development)
+- **http://13.60.241.86:5000/***: To connect to the production backend API for verification
 
 ### 4.2 Data Processing
 
 #### 4.2.1 Local Processing
-- Text selection and UI interactions
+- Text selection and UI interactions (after user clicks extension icon)
 - Theme detection and customization
 - Extension settings and preferences
+- Dynamic content script injection (only when user clicks extension icon or uses context menu)
 
 #### 4.2.2 Remote Processing
 - Claim verification through AI backend

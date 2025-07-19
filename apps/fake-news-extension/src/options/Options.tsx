@@ -411,7 +411,7 @@ const Options = () => {
                       id="serverUrl"
                       value={settings.serverUrl}
                       onChange={(e) => handleSettingChange('serverUrl', e.target.value)}
-                      placeholder="http://localhost:5000"
+                      placeholder="http://13.60.241.86:5000"
                       className="flex-1"
                     />
                     <Button variant="outline" onClick={copyServerUrl} size="icon">

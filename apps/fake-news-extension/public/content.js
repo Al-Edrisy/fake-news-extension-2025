@@ -2,6 +2,9 @@
 // Content script that runs on web pages
 console.log('VeriNews Extension content script loaded');
 
+// Initialize text selection functionality immediately
+initializeTextSelection();
+
 // Theme system integration
 const getThemeColors = () => {
   // Get computed styles from the page to detect theme
@@ -82,6 +85,15 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
         playCustomSound();
         sendResponse({ success: true });
       }
+      
+      if (request.action === 'showFloatingButton') {
+        showFloatingVerifyButton();
+        sendResponse({ success: true });
+      }
+      
+      if (request.action === 'ping') {
+        sendResponse({ success: true, message: 'Content script is active' });
+      }
     } catch (error) {
       console.error('Error handling message in content script:', error);
       sendResponse({ success: false, error: error.message });
@@ -126,20 +138,20 @@ function showLoadingIndicatorAtSelection() {
   const indicator = document.createElement('div');
   indicator.id = 'verinews-loading-indicator';
   indicator.style.cssText = `
-    position: absolute;
+    position: fixed;
     z-index: 2147483647;
-    background: hsl(var(--card));
-    color: hsl(var(--primary-text));
-    border: 2px solid hsl(var(--primary));
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
-    padding: 12px 20px 12px 16px;
-    font-size: 15px;
-    font-weight: 600;
+    background: hsl(var(--card, #fff));
+    color: hsl(var(--primary-text, #222));
+    border: 1px solid hsl(var(--primary, #e11d48));
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 500;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     pointer-events: auto;
     user-select: none;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -147,23 +159,24 @@ function showLoadingIndicatorAtSelection() {
     transform: translateY(-10px) scale(0.95);
     cursor: grab;
     backdrop-filter: blur(8px);
-    min-width: 200px;
+    min-width: 160px;
+    max-width: 200px;
   `;
   indicator.setAttribute('aria-live', 'polite');
   indicator.innerHTML = `
-    <div style="position: relative; width: 24px; height: 24px;">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="12" cy="12" r="10" stroke="hsl(var(--primary))" stroke-width="2.5" opacity="0.2"/>
-        <path d="M22 12a10 10 0 0 1-10 10" stroke="hsl(var(--primary))" stroke-width="2.5" stroke-linecap="round">
+    <div style="position: relative; width: 16px; height: 16px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" stroke="hsl(var(--primary, #e11d48))" stroke-width="2" opacity="0.2"/>
+        <path d="M22 12a10 10 0 0 1-10 10" stroke="hsl(var(--primary, #e11d48))" stroke-width="2" stroke-linecap="round">
           <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
         </path>
       </svg>
     </div>
     <div style="flex: 1; min-width: 0;">
-      <div id="verinews-loading-text" style="font-weight: 600; color: hsl(var(--primary-text)); margin-bottom: 2px;">Verifying claim...</div>
-      <div id="verinews-loading-timer" style="font-size: 13px; color: hsl(var(--muted-text)); font-weight: 500;">0.0s</div>
+      <div id="verinews-loading-text" style="font-weight: 500; color: hsl(var(--primary-text, #222)); font-size: 11px;">Analyzing...</div>
+      <div id="verinews-loading-timer" style="font-size: 10px; color: hsl(var(--muted-text, #6b7280)); font-weight: 400;">0.0s</div>
     </div>
-    <div style="width: 8px; height: 8px; background: hsl(var(--primary)); border-radius: 50%; animation: pulse 2s infinite;"></div>
+    <div style="width: 6px; height: 6px; background: hsl(var(--primary, #e11d48)); border-radius: 50%; animation: pulse 2s infinite;"></div>
   `;
   
   // Add pulse animation
@@ -176,33 +189,20 @@ function showLoadingIndicatorAtSelection() {
   `;
   document.head.appendChild(style);
   
-  // Position near selection
-  let x = window.innerWidth / 2, y = window.innerHeight / 2;
-  const sel = window.getSelection();
-  if (sel && sel.rangeCount > 0) {
-    const range = sel.getRangeAt(0);
-    const rect = range.getBoundingClientRect();
-    if (rect && rect.width && rect.height) {
-      x = rect.left + rect.width / 2;
-      y = rect.top - 40; // above selection
-      if (y < 20) y = rect.bottom + 20; // if above is out of view, put below
-    }
-  }
-  
-  // Keep within viewport bounds
-  const margin = 20;
-  x = Math.max(margin, Math.min(window.innerWidth - 220 - margin, x));
-  y = Math.max(margin, Math.min(window.innerHeight - 60 - margin, y));
+  // Position in center of screen for better visibility
+  const x = window.innerWidth / 2;
+  const y = window.innerHeight / 2;
   
   indicator.style.left = `${x}px`;
   indicator.style.top = `${y}px`;
+  indicator.style.transform = 'translate(-50%, -50%) scale(0.95)';
   indicator.style.position = 'fixed';
   document.body.appendChild(indicator);
 
   // Animate in
   requestAnimationFrame(() => {
     indicator.style.opacity = '1';
-    indicator.style.transform = 'translateY(0) scale(1)';
+    indicator.style.transform = 'translate(-50%, -50%) scale(1)';
   });
 
   // Enhanced movable logic
@@ -247,19 +247,13 @@ function showLoadingIndicatorAtSelection() {
   
   indicator.addEventListener('mouseleave', onStopDrag);
 
-  // Enhanced timer logic
+  // Simple timer logic
   let startTime = Date.now();
   let timerInterval = setInterval(() => {
     const elapsed = (Date.now() - startTime) / 1000;
     const timerSpan = indicator.querySelector('#verinews-loading-timer');
     if (timerSpan) {
       timerSpan.textContent = `${elapsed.toFixed(1)}s`;
-      // Change color based on time
-      if (elapsed > 10) {
-        timerSpan.style.color = c.warning;
-      } else if (elapsed > 5) {
-        timerSpan.style.color = c.accent;
-      }
     }
   }, 100);
   indicator.dataset.timerInterval = timerInterval;
@@ -397,68 +391,29 @@ function renderTimingsDropdown(timings, c) {
   `;
 }
 
-// --- Main popup rendering ---
+// --- Professional Comprehensive Result Popup ---
 function showVerificationPopup(result, claim) {
   playCustomSound();
   // Remove existing popup if any
   const existingPopup = document.getElementById('verinews-popup');
   if (existingPopup) existingPopup.parentElement?.remove();
 
-  // Theme CSS variables (from index.css)
-  const lightVars = `
-    --background: 0 0% 100%;
-    --foreground: 217 84% 15%;
-    --surface: 218 35% 97%;
-    --primary: 348 85% 60%;
-    --secondary: 345 100% 57%;
-    --accent: 73 55% 67%;
-    --muted-text: 217 66% 33%;
-    --primary-text: 217 84% 15%;
-    --success: 107 41% 81%;
-    --info: 217 66% 33%;
-    --warning: 37 94% 52%;
-    --error: 348 60% 45%;
-    --border: 220 22% 92%;
-    --card: 0 0% 100%;
-    --primary-foreground: 0 0% 100%;
-  `;
-  const darkVars = `
-    --background: 217 100% 15%;
-    --foreground: 0 0% 100%;
-    --surface: 216 79% 19%;
-    --primary: 348 85% 60%;
-    --secondary: 345 100% 57%;
-    --accent: 73 55% 67%;
-    --muted-text: 228 35% 84%;
-    --primary-text: 0 0% 100%;
-    --success: 107 41% 81%;
-    --info: 217 66% 33%;
-    --warning: 37 94% 65%;
-    --error: 348 70% 50%;
-    --border: 217 44% 37%;
-    --card: 216 79% 19%;
-    --primary-foreground: 0 0% 100%;
-  `;
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const themeVars = prefersDark ? darkVars : lightVars;
-
-  // Theme colors (for inline styles)
+  // Professional color scheme
   const c = {
-    background: 'hsl(var(--background))',
-    card: 'hsl(var(--card))',
-    border: 'hsl(var(--border))',
-    primary: 'hsl(var(--primary))',
-    secondary: 'hsl(var(--secondary))',
-    accent: 'hsl(var(--accent))',
-    text: 'hsl(var(--primary-text))',
-    muted: 'hsl(var(--muted-text))',
-    error: 'hsl(var(--error))',
-    surface: 'hsl(var(--surface))',
-    success: 'hsl(var(--success))',
-    warning: 'hsl(var(--warning))',
-    info: 'hsl(var(--info))',
-    borderRadius: '18px',
+    background: '#ffffff',
+    card: '#ffffff',
+    border: '#e5e7eb',
+    primary: '#e11d48',
+    text: '#1f2937',
+    muted: '#6b7280',
+    error: '#ef4444',
+    success: '#22c55e',
+    warning: '#f59e0b',
+    info: '#3b82f6',
+    surface: '#f9fafb',
+    surfaceDark: '#f3f4f6'
   };
+  
   const verdictStyle = getVerdictStyle(result.verdict, c);
 
   // Overlay
@@ -466,287 +421,418 @@ function showVerificationPopup(result, claim) {
   overlay.id = 'verinews-popup-overlay';
   overlay.style.cssText = `
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.18); backdrop-filter: blur(4px);
+    background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
     z-index: 10000;
     display: flex; align-items: center; justify-content: center;
     opacity: 0;
     transition: opacity 0.3s ease;
+    padding: 20px;
   `;
   overlay.tabIndex = 0;
-  overlay.setAttribute('aria-label', 'Verification result overlay');
 
-  // Popup
+  // Professional Popup
   const popup = document.createElement('div');
   popup.id = 'verinews-popup';
   popup.setAttribute('role', 'dialog');
   popup.setAttribute('aria-modal', 'true');
-  popup.setAttribute('aria-label', 'Verification result');
   popup.style.cssText = `
     background: ${c.card};
-    border-radius: ${c.borderRadius};
-    box-shadow: 0 20px 60px rgba(0,0,0,0.18), 0 8px 24px rgba(0,0,0,0.10);
-    max-width: 480px;
-    min-width: 320px;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    max-width: 600px;
     width: 100%;
+    max-height: 80vh;
     padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     color: ${c.text};
-    border: 1.5px solid ${c.border};
+    border: 1px solid ${c.border};
     outline: none;
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) scale(0.95);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    transform: scale(0.95);
+    transition: all 0.3s ease;
     user-select: none;
-    backdrop-filter: blur(8px);
     overflow: hidden;
-    ${themeVars}
+    display: flex;
+    flex-direction: column;
   `;
-  popup.tabIndex = 0;
 
-  // Add theme switcher UI at the top of the popup
-  const themeSwitcher = document.createElement('div');
-  themeSwitcher.style.cssText = `
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    display: flex;
-    gap: 8px;
-    z-index: 10;
+  // Professional Header
+  const header = document.createElement('div');
+  header.style.cssText = `
+    display: flex; align-items: center; gap: 16px; 
+    background: ${c.primary}; color: white; 
+    padding: 20px 24px; font-weight: 600; font-size: 16px;
+    position: relative;
+    flex-shrink: 0;
   `;
-  const systemBtn = document.createElement('button');
-  systemBtn.id = 'verinews-theme-system';
-  systemBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 12h20L12 2z"/></svg> System`;
-  systemBtn.style.cssText = `
-    background: hsl(var(--muted));
-    color: hsl(var(--primary-text));
-    border: none;
-    border-radius: 6px;
-    padding: 6px 12px;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s;
+  
+  const verdictIcon = document.createElement('div');
+  verdictIcon.style.cssText = `
+    width: 32px; height: 32px; border-radius: 8px; 
+    background: rgba(255,255,255,0.2); 
+    display: flex; align-items: center; justify-content: center; 
+    font-size: 18px; color: white;
   `;
-  systemBtn.onclick = () => {
-    chrome.storage.sync.set({ theme: 'system' }, () => {
-      applyThemeToPopup('system', popup);
-      systemBtn.style.backgroundColor = c.primary;
-      systemBtn.style.color = c.primaryForeground;
-      systemBtn.style.border = `1px solid ${c.primary}`;
-      systemBtn.style.boxShadow = `0 2px 8px ${c.primary}30`;
-      systemBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 12h20L12 2z"/></svg> System`;
-    });
-  };
-  const lightBtn = document.createElement('button');
-  lightBtn.id = 'verinews-theme-light';
-  lightBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg> Light`;
-  lightBtn.style.cssText = `
-    background: hsl(var(--muted));
-    color: hsl(var(--primary-text));
-    border: none;
-    border-radius: 6px;
-    padding: 6px 12px;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s;
+  verdictIcon.textContent = verdictStyle.icon;
+  
+  const verdictInfo = document.createElement('div');
+  verdictInfo.style.cssText = `
+    flex: 1; display: flex; flex-direction: column; gap: 4px;
   `;
-  lightBtn.onclick = () => {
-    chrome.storage.sync.set({ theme: 'light' }, () => {
-      applyThemeToPopup('light', popup);
-      lightBtn.style.backgroundColor = c.primary;
-      lightBtn.style.color = c.primaryForeground;
-      lightBtn.style.border = `1px solid ${c.primary}`;
-      lightBtn.style.boxShadow = `0 2px 8px ${c.primary}30`;
-      lightBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg> Light`;
-    });
-  };
-  const darkBtn = document.createElement('button');
-  darkBtn.id = 'verinews-theme-dark';
-  darkBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 12h20L12 2z"/></svg> Dark`;
-  darkBtn.style.cssText = `
-    background: hsl(var(--muted));
-    color: hsl(var(--primary-text));
-    border: none;
-    border-radius: 6px;
-    padding: 6px 12px;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s;
+  
+  const verdictText = document.createElement('div');
+  verdictText.style.cssText = `
+    font-size: 18px; font-weight: 700;
   `;
-  darkBtn.onclick = () => {
-    chrome.storage.sync.set({ theme: 'dark' }, () => {
-      applyThemeToPopup('dark', popup);
-      darkBtn.style.backgroundColor = c.primary;
-      darkBtn.style.color = c.primaryForeground;
-      darkBtn.style.border = `1px solid ${c.primary}`;
-      darkBtn.style.boxShadow = `0 2px 8px ${c.primary}30`;
-      darkBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 12h20L12 2z"/></svg> Dark`;
-    });
-  };
-  themeSwitcher.appendChild(systemBtn);
-  themeSwitcher.appendChild(lightBtn);
-  themeSwitcher.appendChild(darkBtn);
-  popup.appendChild(themeSwitcher);
-
-  // Main HTML
-  popup.innerHTML = `
-    <div id="verinews-move-header" style="cursor: move; user-select: none; display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary))); color: hsl(var(--primary-foreground)); border-radius: 18px 18px 0 0; padding: 18px 24px 14px 24px; font-weight: 700; font-size: 19px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-      <div style="width: 36px; height: 36px; border-radius: 10px; background: ${verdictStyle.bg}; display: flex; align-items: center; justify-content: center; font-size: 20px; color: ${verdictStyle.color};">
-        ${verdictStyle.icon}
-      </div>
-      <div style="flex: 1;">
-        <div style="font-size: 18px; font-weight: 700; color: hsl(var(--primary-foreground)); letter-spacing: 0.01em;">${result.verdict || 'Uncertain'}</div>
-        <div style="font-size: 13px; color: rgba(255,255,255,0.85); margin-top: 2px;">${result.category ? result.category.charAt(0).toUpperCase() + result.category.slice(1) : ''}</div>
-      </div>
-      <div style="opacity: 0.7; cursor: pointer; padding: 4px; border-radius: 4px; transition: all 0.2s;" id="verinews-close-btn">
+  verdictText.textContent = result.verdict || 'Uncertain';
+  
+  const categoryText = document.createElement('div');
+  categoryText.style.cssText = `
+    font-size: 13px; opacity: 0.9; font-weight: 400;
+  `;
+  categoryText.textContent = result.category ? result.category.charAt(0).toUpperCase() + result.category.slice(1) : 'News Verification';
+  
+  verdictInfo.appendChild(verdictText);
+  verdictInfo.appendChild(categoryText);
+  
+  const closeBtn = document.createElement('div');
+  closeBtn.id = 'verinews-close-btn';
+  closeBtn.style.cssText = `
+    cursor: pointer; padding: 8px; border-radius: 6px; 
+    transition: all 0.2s; opacity: 0.8; hover:opacity:1;
+  `;
+  closeBtn.innerHTML = `
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M18 6L6 18M6 6l12 12"/>
         </svg>
-      </div>
-    </div>
-    <div style="padding: 24px 24px 18px 24px; background: ${c.background};">
-      <div style="font-size: 16px; font-weight: 600; margin-bottom: 10px; color: ${c.text}; line-height: 1.5; letter-spacing: 0.01em;">${result.conclusion || ''}</div>
-      <div style="font-size: 14px; color: ${c.muted}; margin-bottom: 16px; line-height: 1.6;">${result.explanation || ''}</div>
-      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
-        <span style="font-size: 13px; color: ${c.muted};">Confidence: <b style="color:${c.text};">${result.confidence !== undefined && result.confidence !== null ? Number(result.confidence).toFixed(1) : '0'}%</b></span>
-      </div>
-      ${renderTimingsDropdown(result.timings, c)}
-      ${renderSources(result.sources, c)}
-      <div style="margin-top: 18px; display: flex; gap: 12px; justify-content: flex-end;">
-        <button id="verinews-close" aria-label="Close verification result" style="padding: 9px 24px; background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">Close</button>
-      </div>
-    </div>
-    <style>
-      #verinews-popup:focus { outline: 2px solid hsl(var(--primary)); outline-offset: 2px; }
-      #verinews-popup-overlay:focus { outline: none; }
-      #verinews-move-header:active { background: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--primary))); }
-      #verinews-close-btn:hover { opacity: 1; background: hsl(var(--muted) / 0.13); }
-      #verinews-close:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.13); }
-      @media (max-width: 600px) { 
-        #verinews-popup { 
-          min-width: 0 !important; 
-          max-width: 98vw !important; 
-          margin: 10px;
-        } 
-        #verinews-move-header { padding: 14px 10px 10px 10px; font-size: 16px; }
-      }
-    </style>
   `;
+  
+  header.appendChild(verdictIcon);
+  header.appendChild(verdictInfo);
+  header.appendChild(closeBtn);
+  popup.appendChild(header);
 
-  // Copy button logic
-  const copyBtn = popup.querySelector('#verinews-copy-btn');
-  if (copyBtn) {
-    copyBtn.onclick = () => {
-      navigator.clipboard.writeText(
-        `Claim: ${claim || ''}\nConclusion: ${result.conclusion || ''}\nExplanation: ${result.explanation || ''}\nConfidence: ${result.confidence || ''}%\nCategory: ${result.category || ''}\nClaim ID: ${result.claim_id || ''}`
-      );
-    };
+  // Scrollable Content Area
+  const contentArea = document.createElement('div');
+  contentArea.style.cssText = `
+    flex: 1; overflow-y: auto; padding: 24px;
+  `;
+  
+  // 3. Enhanced Original Claim Card
+  if (claim) {
+    const claimSection = document.createElement('div');
+    claimSection.style.cssText = `
+      margin-bottom: 20px; padding: 18px 20px; background: ${c.surface}; 
+      border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      display: flex; align-items: flex-start; gap: 12px;
+    `;
+    claimSection.innerHTML = `
+      <div style="color: ${c.primary}; font-size: 22px; margin-top: 2px;">“</div>
+      <div style="flex:1;">
+        <div style="font-size: 12px; color: ${c.muted}; font-weight: 600; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Original Claim</div>
+        <div style="font-size: 15px; color: ${c.text}; line-height: 1.6; font-style: italic;">${claim}</div>
+      </div>
+    `;
+    contentArea.appendChild(claimSection);
   }
 
-  // Timings toggle logic
-  const timingsToggle = popup.querySelector('#verinews-timings-toggle');
-  const timingsSection = popup.querySelector('#verinews-timings-section');
-  if (timingsToggle && timingsSection) {
-    timingsToggle.onclick = () => {
-      if (timingsSection.style.display === 'none') {
-        timingsSection.style.display = 'block';
-        timingsToggle.textContent = 'Hide timings';
-      } else {
-        timingsSection.style.display = 'none';
-        timingsToggle.textContent = 'Show timings';
+  // Main Result Section (unchanged except for claim ID removal)
+  const resultSection = document.createElement('div');
+  resultSection.style.cssText = `
+    margin-bottom: 24px;
+  `;
+  
+  // Conclusion
+  if (result.conclusion) {
+    const conclusion = document.createElement('div');
+    conclusion.style.cssText = `
+      font-size: 16px; font-weight: 600; margin-bottom: 16px; 
+      color: ${c.text}; line-height: 1.5;
+    `;
+    conclusion.textContent = result.conclusion;
+    resultSection.appendChild(conclusion);
+  }
+  
+  // Explanation
+  if (result.explanation) {
+    const explanation = document.createElement('div');
+    explanation.style.cssText = `
+      font-size: 14px; color: ${c.muted}; margin-bottom: 16px; 
+      line-height: 1.6;
+    `;
+    explanation.textContent = result.explanation;
+    resultSection.appendChild(explanation);
+  }
+  
+  // Confidence and Metrics
+  const metricsSection = document.createElement('div');
+  metricsSection.style.cssText = `
+    display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;
+  `;
+  
+  // Confidence
+  if (result.confidence !== undefined) {
+    const confidenceCard = document.createElement('div');
+    confidenceCard.style.cssText = `
+      flex: 1; min-width: 120px; padding: 16px; background: ${c.surface}; 
+      border-radius: 12px; border: 1px solid ${c.border};
+    `;
+    confidenceCard.innerHTML = `
+      <div style="font-size: 12px; color: ${c.muted}; font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Confidence</div>
+      <div style="font-size: 24px; font-weight: 700; color: ${c.primary}; margin-bottom: 8px;">${result.confidence.toFixed(1)}%</div>
+      <div style="height: 8px; background: ${c.surfaceDark}; border-radius: 4px; overflow: hidden;">
+        <div style="height: 100%; width: ${result.confidence}%; background: ${c.primary}; transition: width 0.7s; border-radius: 4px;"></div>
+      </div>
+    `;
+    metricsSection.appendChild(confidenceCard);
+  }
+  
+  // Sources Count (unchanged)
+  if (result.sources && result.sources.length > 0) {
+    const sourcesCard = document.createElement('div');
+    sourcesCard.style.cssText = `
+      flex: 1; min-width: 120px; padding: 16px; background: ${c.surface}; 
+      border-radius: 12px; border: 1px solid ${c.border};
+    `;
+    sourcesCard.innerHTML = `
+      <div style="font-size: 12px; color: ${c.muted}; font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Sources</div>
+      <div style="font-size: 24px; font-weight: 700; color: ${c.info}; margin-bottom: 8px;">${result.sources.length}</div>
+      <div style="font-size: 12px; color: ${c.muted};">Verified sources</div>
+    `;
+    metricsSection.appendChild(sourcesCard);
+  }
+  
+  // (No claim ID card)
+  resultSection.appendChild(metricsSection);
+  contentArea.appendChild(resultSection);
+
+  // 4. Sources Section with Line Chart for Confidence
+  if (result.sources && result.sources.length > 0) {
+    const sourcesSection = document.createElement('div');
+    sourcesSection.style.cssText = `
+      margin-bottom: 20px;
+    `;
+    const sourcesHeader = document.createElement('div');
+    sourcesHeader.style.cssText = `
+      font-size: 16px; font-weight: 600; margin-bottom: 16px; 
+      color: ${c.text}; display: flex; align-items: center; gap: 8px;
+    `;
+    sourcesHeader.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${c.muted}" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+      </svg>
+      Sources (${result.sources.length})
+    `;
+    sourcesSection.appendChild(sourcesHeader);
+    // SVG line chart for all sources' confidence
+    const chartDiv = document.createElement('div');
+    chartDiv.style.cssText = 'width: 100%; height: 180px; margin-bottom: 16px;';
+    chartDiv.id = 'verinews-sources-chart';
+    // Prepare data
+      const chartData = result.sources.map((src, i) => ({
+        name: src.title || src.source || `Source ${i+1}`,
+      confidence: typeof src.confidence === 'number' ? src.confidence : 0
+      }));
+    // SVG line chart rendering
+    function renderLineChart(data, color) {
+      if (!data.length) return '<div style="color:' + c.muted + ';font-size:13px;">No data</div>';
+      const w = 520, h = 140, pad = 32;
+      const maxY = 100, minY = 0;
+      const stepX = (w - 2 * pad) / (data.length - 1 || 1);
+      const points = data.map((d, i) => {
+        const x = pad + i * stepX;
+        const y = pad + (h - 2 * pad) * (1 - (d.confidence - minY) / (maxY - minY));
+        return { x, y };
+      });
+      let polyline = points.map(p => `${p.x},${p.y}`).join(' ');
+      let circles = points.map((p, i) => `<circle cx="${p.x}" cy="${p.y}" r="4" fill="${color}" />`).join('');
+      let labels = points.map((p, i) => `<text x="${p.x}" y="${h - pad + 16}" font-size="11" text-anchor="middle" fill="${c.muted}">${data[i].name.length > 10 ? data[i].name.slice(0,10)+'…' : data[i].name}</text>`).join('');
+      let yLabels = [0, 25, 50, 75, 100].map(val => {
+        const y = pad + (h - 2 * pad) * (1 - (val - minY) / (maxY - minY));
+        return `<text x="8" y="${y+4}" font-size="10" fill="${c.muted}">${val}%</text>`;
+      }).join('');
+      return `<svg width="${w}" height="${h}">
+        <polyline fill="none" stroke="${color}" stroke-width="2.5" points="${polyline}" />
+        ${circles}
+        ${labels}
+        ${yLabels}
+      </svg>`;
       }
-    };
+    chartDiv.innerHTML = renderLineChart(chartData, c.primary);
+    sourcesSection.appendChild(chartDiv);
+    // Individual sources list (no progress bars)
+    const sourcesList = document.createElement('div');
+    sourcesList.style.cssText = `
+      display: flex; flex-direction: column; gap: 12px; max-height: 300px; overflow-y: auto;
+    `;
+    result.sources.forEach((src, i) => {
+      const sourceCard = document.createElement('div');
+      sourceCard.style.cssText = `
+        padding: 16px; background: ${c.surface}; border-radius: 12px; 
+        border: 1px solid ${c.border}; display: flex; flex-direction: column; gap: 12px;
+      `;
+      const favicon = getFaviconUrl(src.url);
+      const supportColor = src.support === 'Support' ? c.success : 
+                          src.support === 'Contradict' ? c.error : 
+                          src.support === 'Partial' ? c.warning : c.muted;
+      sourceCard.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <img src="${favicon}" alt="favicon" style="width: 24px; height: 24px; border-radius: 6px; object-fit: cover; box-shadow: 0 1px 4px rgba(0,0,0,0.1);"/>
+          <span style="padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; background: ${supportColor}; color: white;">${src.support}</span>
+          ${src.confidence ? `<span style=\"font-size: 12px; color: ${c.muted};\">${src.confidence.toFixed(1)}% confidence</span>` : ''}
+        </div>
+        <a href="${src.url}" target="_blank" rel="noopener noreferrer" style="font-weight: 600; color: ${c.primary}; font-size: 14px; text-decoration: none; line-height: 1.4;">${src.title || src.source}</a>
+        ${src.snippet ? `<div style=\"color: ${c.muted}; font-size: 13px; line-height: 1.5;\">${src.snippet}</div>` : ''}
+        ${src.reason ? `<div style=\"color: ${c.text}; font-size: 13px; line-height: 1.5; font-style: italic;\">${src.reason}</div>` : ''}
+        ${src.relevant === false ? `<div style=\"color: ${c.error}; font-size: 12px; font-weight: 600;\">⚠️ Irrelevant source</div>` : ''}
+      `;
+      sourcesList.appendChild(sourceCard);
+    });
+    sourcesSection.appendChild(sourcesList);
+    contentArea.appendChild(sourcesSection);
   }
-  // Source show more/less logic
-  const sourceToggles = popup.querySelectorAll('.verinews-source-toggle');
-  sourceToggles.forEach(btn => {
-    btn.onclick = () => {
-      const idx = btn.getAttribute('data-index');
-      const details = btn.closest('div').querySelector('.verinews-source-details');
-      if (details.style.display === 'none') {
-        details.style.display = 'block';
-        btn.textContent = 'Show less';
-      } else {
-        details.style.display = 'none';
-        btn.textContent = 'Show more';
-      }
-    };
-  });
 
-  // Movable logic
-  let isDragging = false, startX = 0, startY = 0, startLeft = 0, startTop = 0;
-  const header = popup.querySelector('#verinews-move-header');
-  header.addEventListener('mousedown', (e) => {
-    if (e.target.closest('#verinews-close-btn')) return;
-    isDragging = true;
-    startX = e.clientX;
-    startY = e.clientY;
-    const rect = popup.getBoundingClientRect();
-    startLeft = rect.left;
-    startTop = rect.top;
-    document.body.style.userSelect = 'none';
-    popup.style.transform = 'translate(-50%, -50%) scale(0.98)';
-  });
-  document.addEventListener('mousemove', onDrag);
-  document.addEventListener('mouseup', onStopDrag);
-  function onDrag(e) {
-    if (!isDragging) return;
-    let newLeft = startLeft + (e.clientX - startX);
-    let newTop = startTop + (e.clientY - startY);
-    const minMargin = 20;
-    newLeft = Math.max(minMargin, Math.min(window.innerWidth - popup.offsetWidth - minMargin, newLeft));
-    newTop = Math.max(minMargin, Math.min(window.innerHeight - popup.offsetHeight - minMargin, newTop));
-    popup.style.left = newLeft + 'px';
-    popup.style.top = newTop + 'px';
-    popup.style.transform = 'scale(0.98)';
-  }
-  function onStopDrag() {
-    if (isDragging) {
-      isDragging = false;
-      document.body.style.userSelect = '';
-      popup.style.transform = 'scale(1)';
+  // 2. Timing Section with shadcn LineChart
+  if (result.timings) {
+    const timingsSection = document.createElement('div');
+    timingsSection.style.cssText = `
+      margin-bottom: 20px;
+    `;
+    const timingsHeader = document.createElement('div');
+    timingsHeader.style.cssText = `
+      font-size: 16px; font-weight: 600; margin-bottom: 16px; 
+      color: ${c.text}; display: flex; align-items: center; gap: 8px; cursor: pointer;
+    `;
+    timingsHeader.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${c.muted}" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <polyline points="12,6 12,12 16,14"/>
+      </svg>
+      Performance Metrics
+    `;
+    const timingsChartDiv = document.createElement('div');
+    timingsChartDiv.style.cssText = 'width: 100%; height: 140px;';
+    timingsChartDiv.id = 'verinews-timings-chart';
+    // Prepare data
+      const timingData = Object.entries(result.timings).map(([k, v]) => ({
+        name: k.charAt(0).toUpperCase() + k.slice(1),
+        value: Number(v)
+      }));
+    // SVG line chart rendering
+    function renderTimingLineChart(data, color) {
+      if (!data.length) return '<div style="color:' + c.muted + ';font-size:13px;">No data</div>';
+      const w = 520, h = 100, pad = 32;
+      const maxY = Math.max(...data.map(d => d.value), 1);
+      const minY = 0;
+      const stepX = (w - 2 * pad) / (data.length - 1 || 1);
+      const points = data.map((d, i) => {
+        const x = pad + i * stepX;
+        const y = pad + (h - 2 * pad) * (1 - (d.value - minY) / (maxY - minY));
+        return { x, y };
+      });
+      let polyline = points.map(p => `${p.x},${p.y}`).join(' ');
+      let circles = points.map((p, i) => `<circle cx="${p.x}" cy="${p.y}" r="4" fill="${color}" />`).join('');
+      let labels = points.map((p, i) => `<text x="${p.x}" y="${h - pad + 16}" font-size="11" text-anchor="middle" fill="${c.muted}">${data[i].name}</text>`).join('');
+      let yLabels = [0, maxY/2, maxY].map(val => {
+        const y = pad + (h - 2 * pad) * (1 - (val - minY) / (maxY - minY));
+        return `<text x="8" y="${y+4}" font-size="10" fill="${c.muted}">${val.toFixed(2)}s</text>`;
+      }).join('');
+      return `<svg width="${w}" height="${h}">
+        <polyline fill="none" stroke="${color}" stroke-width="2.5" points="${polyline}" />
+        ${circles}
+        ${labels}
+        ${yLabels}
+      </svg>`;
     }
+    timingsChartDiv.innerHTML = renderTimingLineChart(timingData, c.primary);
+    timingsSection.appendChild(timingsHeader);
+    timingsSection.appendChild(timingsChartDiv);
+    contentArea.appendChild(timingsSection);
   }
+
+  popup.appendChild(contentArea);
+
+  // Footer with actions (unchanged)
+  const footer = document.createElement('div');
+  footer.style.cssText = `
+    padding: 20px 24px; background: ${c.surface}; border-top: 1px solid ${c.border};
+    display: flex; gap: 12px; justify-content: flex-end; flex-shrink: 0;
+  `;
+  
+  // Copy button
+  const copyButton = document.createElement('button');
+  copyButton.style.cssText = `
+    padding: 10px 20px; background: ${c.surface}; color: ${c.text}; 
+    border: 1px solid ${c.border}; border-radius: 8px; font-size: 14px; 
+    font-weight: 500; cursor: pointer; transition: all 0.2s;
+  `;
+  copyButton.textContent = 'Copy Result';
+  copyButton.onclick = () => {
+    const resultText = `VeriNews Verification Result:
+Claim: ${claim || ''}
+Verdict: ${result.verdict || 'Uncertain'}
+Confidence: ${result.confidence ? result.confidence.toFixed(1) + '%' : 'N/A'}
+Conclusion: ${result.conclusion || ''}
+Explanation: ${result.explanation || ''}
+Sources: ${result.sources ? result.sources.length : 0}
+Claim ID: ${result.claim_id || ''}`;
+    
+    navigator.clipboard.writeText(resultText).then(() => {
+      copyButton.textContent = 'Copied!';
+      copyButton.style.background = c.success;
+      copyButton.style.color = 'white';
+      setTimeout(() => {
+        copyButton.textContent = 'Copy Result';
+        copyButton.style.background = c.surface;
+        copyButton.style.color = c.text;
+      }, 2000);
+    });
+  };
+  
+  // Close button
+  const closeButton = document.createElement('button');
+  closeButton.style.cssText = `
+    padding: 10px 20px; background: ${c.primary}; color: white; 
+    border: none; border-radius: 8px; font-size: 14px; 
+    font-weight: 600; cursor: pointer; transition: all 0.2s;
+  `;
+  closeButton.textContent = 'Close';
+  
+  footer.appendChild(copyButton);
+  footer.appendChild(closeButton);
+  popup.appendChild(footer);
 
   // Close handlers
   const closePopup = () => {
-    document.removeEventListener('mousemove', onDrag);
-    document.removeEventListener('mouseup', onStopDrag);
     overlay.style.opacity = '0';
-    popup.style.transform = 'translate(-50%, -50%) scale(0.95)';
+    popup.style.transform = 'scale(0.95)';
     popup.style.opacity = '0';
     setTimeout(() => overlay.remove(), 300);
   };
-  popup.querySelector('#verinews-close').onclick = closePopup;
-  popup.querySelector('#verinews-close-btn').onclick = closePopup;
+  
+  closeButton.onclick = closePopup;
+  closeBtn.onclick = closePopup;
   overlay.addEventListener('mousedown', (e) => {
     if (e.target === overlay) closePopup();
   });
   overlay.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closePopup();
   });
+
   overlay.appendChild(popup);
   document.body.appendChild(overlay);
+  
+  // Animate in
   requestAnimationFrame(() => {
     overlay.style.opacity = '1';
-    popup.style.transform = 'translate(-50%, -50%) scale(1)';
+    popup.style.transform = 'scale(1)';
     popup.style.opacity = '1';
   });
+  
   popup.focus();
 }
+
+
 
 // Function to play custom notification sound using Web Audio API
 function playCustomSound() {
@@ -901,53 +987,365 @@ function renderTimingDonutChart(timings) {
   return svg;
 }
 
-// --- Floating Verify Button on Text Selection ---
+// --- Enhanced Floating Verify/Copy Button on Text Selection ---
 let verifyFab = null;
-document.addEventListener('selectionchange', () => {
-  if (verifyFab) verifyFab.remove();
+let lastSelectedText = '';
+let selectionTimeout = null;
+
+function initializeTextSelection() {
+  console.log('Initializing text selection functionality...');
+  
+  // Remove any existing listeners to prevent duplicates
+  document.removeEventListener('selectionchange', handleSelectionChange);
+  document.removeEventListener('mousedown', handleMouseDown);
+  
+  // Add event listeners
+  document.addEventListener('selectionchange', handleSelectionChange);
+  document.addEventListener('mousedown', handleMouseDown);
+  
+  console.log('Text selection functionality initialized');
+}
+
+function handleSelectionChange() {
+  // Clear existing timeout
+  if (selectionTimeout) {
+    clearTimeout(selectionTimeout);
+  }
+  
+  // Remove existing floating button
+  if (verifyFab) {
+    verifyFab.remove();
+    verifyFab = null;
+  }
+  
+  // Add delay to prevent flickering
+  selectionTimeout = setTimeout(() => {
   const selection = window.getSelection();
-  if (selection && selection.toString().trim().length > 0) {
+    if (selection && selection.toString().trim().length > 10) { // Minimum 10 characters
     const range = selection.getRangeAt(0);
     const rect = range.getBoundingClientRect();
     if (rect && rect.width && rect.height) {
-      verifyFab = document.createElement('button');
+        lastSelectedText = selection.toString().trim();
+        createEnhancedFloatingButton(rect, lastSelectedText);
+      }
+    }
+  }, 150); // 150ms delay for better UX
+}
+
+function handleMouseDown(e) {
+  if (verifyFab && !verifyFab.contains(e.target)) {
+    verifyFab.remove();
+    verifyFab = null;
+  }
+}
+
+function createEnhancedFloatingButton(rect, selectedText) {
+      verifyFab = document.createElement('div');
       verifyFab.id = 'verinews-verify-fab';
-      verifyFab.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg> Verify`;
+  
+  // Enhanced positioning and styling
+  const buttonWidth = 140;
+  const buttonHeight = 40;
+  let left = rect.left + window.scrollX + rect.width / 2 - buttonWidth / 2;
+  let top = rect.top + window.scrollY - buttonHeight - 12;
+  
+  // Keep within viewport bounds
+  const margin = 20;
+  left = Math.max(margin, Math.min(window.innerWidth - buttonWidth - margin, left));
+  if (top < margin) {
+    top = rect.bottom + window.scrollY + 12; // Show below selection if above is out of view
+  }
+  
       verifyFab.style.cssText = `
         position: fixed;
-        left: ${rect.left + window.scrollX + rect.width / 2 - 40}px;
-        top: ${rect.top + window.scrollY - 48}px;
+    left: ${left}px;
+    top: ${top}px;
         z-index: 2147483647;
-        background: hsl(var(--primary));
-        color: hsl(var(--primary-foreground));
+        background: hsl(var(--card, #fff));
+        color: hsl(var(--primary-text, #222));
+    border: 1.5px solid hsl(var(--primary, #e11d48));
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.08);
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 600;
+        display: flex;
+        align-items: center;
+    gap: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(12px);
+        user-select: none;
+    width: ${buttonWidth}px;
+    height: ${buttonHeight}px;
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+    cursor: pointer;
+  `;
+  
+  // Enhanced verify button
+      const verifyBtn = document.createElement('button');
+  verifyBtn.innerHTML = `
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <path d="M9 12l2 2 4-4"/>
+      <circle cx="12" cy="12" r="10"/>
+    </svg>
+    <span>Verify</span>
+  `;
+      verifyBtn.style.cssText = `
+        background: hsl(var(--primary, #e11d48));
+        color: hsl(var(--primary-foreground, #fff));
         border: none;
-        border-radius: 999px;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.13);
-        padding: 10px 18px;
-        font-size: 15px;
-        font-weight: 600;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
         cursor: pointer;
         display: flex;
         align-items: center;
-        gap: 8px;
-        transition: background 0.2s, box-shadow 0.2s;
-      `;
-      verifyFab.onmousedown = (e) => { e.preventDefault(); };
-      verifyFab.onclick = () => {
-        const claim = selection.toString();
-        // Show loading indicator
+    gap: 6px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(225, 29, 72, 0.3);
+    flex: 1;
+    height: 100%;
+  `;
+  
+  // Enhanced hover effects
+  verifyBtn.addEventListener('mouseenter', () => {
+    verifyBtn.style.background = 'hsl(var(--secondary, #be123c))';
+    verifyBtn.style.transform = 'translateY(-1px)';
+    verifyBtn.style.boxShadow = '0 4px 12px rgba(225, 29, 72, 0.4)';
+  });
+  
+  verifyBtn.addEventListener('mouseleave', () => {
+    verifyBtn.style.background = 'hsl(var(--primary, #e11d48))';
+    verifyBtn.style.transform = 'translateY(0)';
+    verifyBtn.style.boxShadow = '0 2px 8px rgba(225, 29, 72, 0.3)';
+  });
+  
+      verifyBtn.onmousedown = (e) => { e.preventDefault(); };
+      verifyBtn.onclick = () => {
+        if (!lastSelectedText) return;
+    
+    // Show loading state on button
+    verifyBtn.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="animate-spin">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5" opacity="0.2"/>
+        <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
+        </path>
+      </svg>
+      <span>Verifying...</span>
+    `;
+    verifyBtn.style.cursor = 'not-allowed';
+    verifyBtn.disabled = true;
+    
+    // Show loading indicator
         showLoadingIndicatorAtSelection();
-        // Send message to background to verify
-        chrome.runtime.sendMessage({ action: 'verifyClaim', claim }, () => {});
-        verifyFab.remove();
+    
+    // Send verification request
+        chrome.runtime.sendMessage({ action: 'verifyClaim', claim: lastSelectedText }, (response) => {
+          if (chrome.runtime.lastError) {
+            console.error('Failed to send message to background:', chrome.runtime.lastError.message);
+            showErrorNotification('Extension background not available. Please reload the extension.');
+        // Reset button state
+        resetVerifyButton();
+          } else {
+            console.log('Background response:', response);
+        // Button will be reset when verification result is shown
+      }
+    });
+    
+    // Remove floating button
+    if (verifyFab) {
+      verifyFab.style.opacity = '0';
+      verifyFab.style.transform = 'translateY(-10px) scale(0.95)';
+      setTimeout(() => {
+        if (verifyFab) verifyFab.remove();
+        verifyFab = null;
+      }, 300);
+    }
       };
+  
+  // Enhanced copy button
+      const copyBtn = document.createElement('button');
+  copyBtn.innerHTML = `
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <rect x="9" y="9" width="13" height="13" rx="2"/>
+      <path d="M5 15V5a2 2 0 0 1 2-2h10"/>
+    </svg>
+  `;
+      copyBtn.style.cssText = `
+        background: hsl(var(--muted, #f3f4f6));
+        color: hsl(var(--primary-text, #222));
+        border: none;
+    border-radius: 8px;
+    padding: 6px;
+    font-size: 12px;
+    font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+    justify-content: center;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    width: 32px;
+    height: 100%;
+  `;
+  
+  // Enhanced copy button hover effects
+  copyBtn.addEventListener('mouseenter', () => {
+    copyBtn.style.background = 'hsl(var(--muted, #e5e7eb))';
+    copyBtn.style.transform = 'translateY(-1px)';
+    copyBtn.style.boxShadow = '0 4px 10px rgba(0,0,0,0.15)';
+  });
+  
+  copyBtn.addEventListener('mouseleave', () => {
+    copyBtn.style.background = 'hsl(var(--muted, #f3f4f6))';
+    copyBtn.style.transform = 'translateY(0)';
+    copyBtn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)';
+  });
+  
+      copyBtn.onmousedown = (e) => { e.preventDefault(); };
+      copyBtn.onclick = async () => {
+        if (!lastSelectedText) return;
+    
+        try {
+          await navigator.clipboard.writeText(lastSelectedText);
+      
+      // Show success state
+      copyBtn.innerHTML = `
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M20 6L9 17l-5-5"/>
+        </svg>
+      `;
+      copyBtn.style.background = 'hsl(var(--success, #dcfce7))';
+      copyBtn.style.color = 'hsl(var(--success-foreground, #166534))';
+      
+          setTimeout(() => {
+        copyBtn.innerHTML = `
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <rect x="9" y="9" width="13" height="13" rx="2"/>
+            <path d="M5 15V5a2 2 0 0 1 2-2h10"/>
+          </svg>
+        `;
+        copyBtn.style.background = 'hsl(var(--muted, #f3f4f6))';
+        copyBtn.style.color = 'hsl(var(--primary-text, #222))';
+      }, 1500);
+        } catch (err) {
+      // Show error state
+      copyBtn.innerHTML = `
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      `;
+      copyBtn.style.background = 'hsl(var(--error, #fee2e2))';
+      copyBtn.style.color = 'hsl(var(--error-foreground, #991b1b))';
+      
+          setTimeout(() => {
+        copyBtn.innerHTML = `
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <rect x="9" y="9" width="13" height="13" rx="2"/>
+            <path d="M5 15V5a2 2 0 0 1 2-2h10"/>
+          </svg>
+        `;
+        copyBtn.style.background = 'hsl(var(--muted, #f3f4f6))';
+        copyBtn.style.color = 'hsl(var(--primary-text, #222))';
+      }, 1500);
+    }
+  };
+  
+      verifyFab.appendChild(verifyBtn);
+      verifyFab.appendChild(copyBtn);
       document.body.appendChild(verifyFab);
+  
+  // Animate in
+  requestAnimationFrame(() => {
+    verifyFab.style.opacity = '1';
+    verifyFab.style.transform = 'translateY(0) scale(1)';
+  });
+}
+
+// Function to reset verify button state
+function resetVerifyButton() {
+  if (verifyFab) {
+    const verifyBtn = verifyFab.querySelector('button');
+    if (verifyBtn) {
+      verifyBtn.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M9 12l2 2 4-4"/>
+          <circle cx="12" cy="12" r="10"/>
+        </svg>
+        <span>Verify</span>
+      `;
+      verifyBtn.style.cursor = 'pointer';
+      verifyBtn.disabled = false;
     }
   }
-});
-document.addEventListener('mousedown', () => {
-  if (verifyFab) verifyFab.remove();
-});
+}
+
+
+// Function to show floating verify button manually
+function showFloatingVerifyButton() {
+  // Remove any existing floating button
+  if (verifyFab) {
+    verifyFab.remove();
+  }
+  
+  // Create a floating button that appears in the center of the screen
+  verifyFab = document.createElement('div');
+  verifyFab.id = 'verinews-verify-fab';
+  verifyFab.style.cssText = `
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2147483647;
+    background: hsl(var(--card, #fff));
+    color: hsl(var(--primary-text, #222));
+    border: 1px solid hsl(var(--primary, #e11d48));
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(8px);
+    user-select: none;
+    min-width: 120px;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  `;
+  
+  verifyFab.innerHTML = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M9 12l2 2 4-4"/>
+      <circle cx="12" cy="12" r="10"/>
+    </svg>
+    <span>Select text to verify</span>
+  `;
+  
+  document.body.appendChild(verifyFab);
+  
+  // Animate in
+  requestAnimationFrame(() => {
+    verifyFab.style.opacity = '1';
+    verifyFab.style.transform = 'translate(-50%, -50%) scale(1)';
+  });
+  
+  // Auto-hide after 3 seconds
+  setTimeout(() => {
+    if (verifyFab) {
+      verifyFab.style.opacity = '0';
+      verifyFab.style.transform = 'translate(-50%, -50%) scale(0.9)';
+      setTimeout(() => {
+        if (verifyFab) verifyFab.remove();
+      }, 300);
+    }
+  }, 3000);
+}
 
 // Add theme switcher logic and UI
 function applyThemeToPopup(theme, popup) {

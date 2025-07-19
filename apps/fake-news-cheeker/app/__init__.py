@@ -15,7 +15,7 @@ from .models.claim_model import Claim
 from .models.source import Source
 from .models.analysis import Analysis
 from .routes import claim_bp, search_bp, analyze_bp
-# Optional: If you want these available when importing just 'app'
+
 __all__ = [
     'Source', 'Analysis',
     'settings',
@@ -27,28 +27,40 @@ __all__ = [
     'ClaimService', 'ScrapeService',
     'NewsScraper', 'NewsArticle', 'google_search_by_query',
     'validate_claim_payload',
-    'handle_error'
+    'handle_error',
+    'create_app',
 ]
 
-from flask import Flask
-from .database import init_db
-from .utils.logger import logger
+from flask import Flask, jsonify
+from flask_cors import CORS
+from dotenv import load_dotenv
 
+from app.database import init_db
+from app.routes import claim_bp, search_bp, analyze_bp
+from app.routes.public_routes import public_bp
 
 def create_app():
-    app = Flask(__name__)
-
+    # Load environment variables
+    load_dotenv()
     # Initialize database
     init_db()
-    logger.info("Database initialized")
+    # Create Flask app
+    app = Flask(__name__)
+    # Enable CORS
+    CORS(app)
 
     # Register blueprints
-    from .routes.claim_routes import claim_bp
-    from .routes.search_routes import search_bp
-    from .routes.analyze_routes import analyze_bp
-
     app.register_blueprint(claim_bp)
     app.register_blueprint(search_bp)
     app.register_blueprint(analyze_bp)
+    app.register_blueprint(public_bp)
+
+    # Health check endpoint
+    @app.route('/health', methods=['GET'])
+    def health_check():
+        return jsonify({"status": "healthy"}), 200
 
     return app
+
+# Explicit export for static analysis tools
+create_app = create_app

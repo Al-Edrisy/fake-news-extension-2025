@@ -44,6 +44,16 @@ A Chrome extension that helps users verify news claims and detect fake news usin
 3. **Popup Interface**: View detailed analysis results in the extension popup
 4. **Settings**: Access extension options through the extension menu
 
+## Environment Variables
+
+To set the backend API base URL, create a `.env` file in the project root with:
+
+```
+VITE_API_BASE_URL=http://13.60.241.86:5000
+```
+
+This will configure the extension to use your AWS backend.
+
 ## Technology Stack
 
 - **Frontend**: React, TypeScript, Vite

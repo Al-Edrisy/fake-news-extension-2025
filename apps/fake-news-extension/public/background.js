@@ -20,13 +20,121 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
+// Set extension icon badge to indicate text selection is available
+chrome.tabs.onActivated.addListener(async (activeInfo) => {
+  try {
+    const tab = await chrome.tabs.get(activeInfo.tabId);
+    if (tab.url && tab.url.startsWith('http')) {
+      // Set badge to indicate text selection is available
+      chrome.action.setBadgeText({ 
+        text: '✓', 
+        tabId: activeInfo.tabId 
+      });
+      chrome.action.setBadgeBackgroundColor({ 
+        color: '#22c55e', 
+        tabId: activeInfo.tabId 
+      });
+    } else {
+      chrome.action.setBadgeText({ 
+        text: '', 
+        tabId: activeInfo.tabId 
+      });
+    }
+  } catch (error) {
+    console.log('Error setting badge:', error);
+  }
+});
+
 // Handle context menu clicks
-chrome.contextMenus.onClicked.addListener((info, tab) => {
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === "verifyWithVeriNews" && info.selectionText) {
+    // Ensure content script is injected before verifying
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ['content.js']
+      });
+      
+      // Clear the badge to indicate text selection is now active
+      chrome.action.setBadgeText({ 
+        text: '', 
+        tabId: tab.id 
+      });
+    } catch (error) {
+      console.log('Content script already injected or failed to inject');
+    }
+    
     // Verify the selected text
     verifyClaimInBackground(info.selectionText, tab.id);
   }
 });
+
+// Handle extension icon click - injects content script and enables text selection functionality
+chrome.action.onClicked.addListener(async (tab) => {
+  try {
+    if (tab.url && tab.url.startsWith('http')) {
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ['content.js']
+      });
+      
+      // Clear the badge to indicate text selection is now active
+      chrome.action.setBadgeText({ 
+        text: '', 
+        tabId: tab.id 
+      });
+      
+      // Send message to show the floating verify button
+      setTimeout(() => {
+        chrome.tabs.sendMessage(tab.id, { action: 'showFloatingButton' });
+      }, 100);
+      
+      console.log('Content script injected and text selection enabled for tab:', tab.id);
+    }
+  } catch (error) {
+    console.log('Error handling extension icon click:', error);
+  }
+});
+
+// Handle messages from content script
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'verifyClaim' && request.claim) {
+    // Verify the claim from content script
+    verifyClaimInBackground(request.claim, sender.tab.id);
+    sendResponse({ success: true });
+  }
+  return true; // Keep the message channel open for async responses
+});
+
+// Helper function to inject content script and send messages
+async function injectContentScriptAndSendMessage(tabId, message, callback = () => {}) {
+  try {
+    const tab = await chrome.tabs.get(tabId);
+    if (!tab || !tab.url || !tab.url.startsWith('http')) {
+      console.log('Tab not suitable for content script injection');
+      return;
+    }
+
+    // Inject content script first
+    await chrome.scripting.executeScript({
+      target: { tabId: tabId },
+      files: ['content.js']
+    });
+
+    // Wait a moment for the script to load
+    setTimeout(() => {
+      chrome.tabs.sendMessage(tabId, message, (response) => {
+        if (chrome.runtime.lastError) {
+          console.warn('Content script not available:', chrome.runtime.lastError.message);
+        } else if (callback) {
+          callback(response);
+        }
+      });
+    }, 100);
+  } catch (error) {
+    console.log('Error injecting content script:', error);
+  }
+}
 
 // Helper function to safely send messages to content scripts
 function safeSendMessage(tabId, message, callback = () => {}) {
@@ -42,7 +150,8 @@ function safeSendMessage(tabId, message, callback = () => {}) {
       }
       chrome.tabs.sendMessage(tabId, message, (response) => {
         if (chrome.runtime.lastError) {
-          console.warn('Content script not available:', chrome.runtime.lastError.message);
+          // Content script not available, inject it first
+          injectContentScriptAndSendMessage(tabId, message, callback);
         } else if (callback) {
           callback(response);
         }
@@ -63,7 +172,7 @@ async function verifyClaimInBackground(claim, tabId) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
     
-    const response = await fetch('http://localhost:5000/api/claims/verify', {
+    const response = await fetch('http://13.60.241.86:5000/api/claims/verify', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -317,6 +426,7 @@ function showVerificationPopup(data, claim = '') {
 
 // Handle messages from other parts of the extension
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log('Background received message:', message, sender);
   if (message.action === 'showVerificationResult') {
     showVerificationPopup(message.result, message.claim);
   }
@@ -329,16 +439,42 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
   }
   if (message.action === 'verifyClaim') {
-    verifyClaimInBackground(message.claim, sender.tab.id);
+    verifyClaimInBackground(message.claim, sender.tab ? sender.tab.id : undefined);
   }
-  // Always send a response to prevent the "port closed" error
   sendResponse({ success: true });
+  return true;
 });
 
-// Handle tab updates
+// On every page load, check and request permission for text selection feature
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete' && tab.url) {
-    console.log('Tab updated:', tab.url);
+  if (changeInfo.status === 'complete' && tab.url && tab.url.startsWith('http')) {
+    const url = new URL(tab.url);
+    const origin = url.origin + '/*';
+    chrome.permissions.contains({origins: [origin]}, (hasPerm) => {
+      if (hasPerm) {
+        // Already have permission, inject content script
+        chrome.scripting.executeScript({
+          target: { tabId: tabId },
+          files: ['content.js']
+        }, () => {
+          console.log('Content script auto-injected for', origin);
+        });
+      } else {
+        // Request permission for this site
+        chrome.permissions.request({origins: [origin]}, (granted) => {
+          if (granted) {
+            chrome.scripting.executeScript({
+              target: { tabId: tabId },
+              files: ['content.js']
+            }, () => {
+              console.log('Content script injected after permission for', origin);
+            });
+          } else {
+            console.log('User denied permission for', origin);
+          }
+        });
+      }
+    });
   }
 });
 
