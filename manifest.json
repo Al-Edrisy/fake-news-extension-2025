@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "VeriNews",
+  "version": "1.0.1",
+  "description": "A powerful Chrome extension for news verification and fact-checking built with React and modern web technologies",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "contextMenus",
+    "notifications",
+    "scripting",
+    "tabs"
+  ],
+  "host_permissions": [
+    "http://localhost:5000/*"
+  ],
+  "optional_host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Open VeriNews Extension"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "options_page": "options.html",
+  "icons": {
+    "16": "icon-16.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  }
+}
