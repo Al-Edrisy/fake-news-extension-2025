@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "pwa:build": "npm run build && npm run pwa:copy",
     "pwa:copy": "cp public/pwa-manifest.json dist/ && cp public/sw.js dist/ && cp public/icon-*.png dist/",
-    "serve": "npx serve dist -p 3000"
+    "serve": "npx serve -s dist -p 3000"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
