@@ -1,7 +1,7 @@
 // Environment configuration
 export const config = {
   // API Configuration
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'https://fake-news-extension-2025.onrender.com',
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'http://13.60.241.86:5000',
   
   // App Configuration
   appName: import.meta.env.VITE_APP_NAME || 'VeriNews',
