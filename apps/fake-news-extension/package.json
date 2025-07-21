@@ -5,11 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && npm run postbuild",
+    "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "postbuild": "mv dist/src/*.html dist/ && rmdir dist/src || true",
     "pwa:build": "npm run build && npm run pwa:copy",
     "pwa:copy": "cp public/pwa-manifest.json dist/ && cp public/sw.js dist/ && cp public/icon-*.png dist/",
     "serve": "npx serve dist -p 3000"
