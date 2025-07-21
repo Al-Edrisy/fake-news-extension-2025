@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: fake-news-extension
+    env: node
+    rootDir: apps/fake-news-extension
+    plan: free
+    buildCommand: "npm install && npm run build"
+    startCommand: "npm run serve"
+    envVars:
+      - key: NODE_VERSION
+        value: "20.11.1"
+      - key: CI
+        value: false 
