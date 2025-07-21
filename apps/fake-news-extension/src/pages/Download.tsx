@@ -32,7 +32,8 @@ import {
   Package,
   Copy,
   Link,
-  Search
+  Search,
+  Info
 } from "lucide-react";
 import { useState } from "react";
 
@@ -421,9 +422,9 @@ const Download = () => {
                             )}
                             {platform.id === "web" && (
                               <Button className="w-full" asChild>
-                                <a href="http://localhost:5173/" target="_blank">
+                                <a href={`${config.apiBaseUrl}`} target="_blank" rel="noopener noreferrer">
                                   <Globe className="h-4 w-4 mr-2" />
-                                  Launch Web App
+                                  Open Web App
                                 </a>
                               </Button>
                             )}
@@ -438,16 +439,16 @@ const Download = () => {
                             )}
                             {platform.id === "api" && (
                               <Button className="w-full" asChild>
-                                <a href="/playground" target="_blank">
-                                  <Terminal className="h-4 w-4 mr-2" />
-                                  Try API Playground
+                                <a href={`${config.apiBaseUrl}/playground`} target="_blank" rel="noopener noreferrer">
+                                  <Zap className="h-4 w-4 mr-2" />
+                                  API Playground
                                 </a>
                               </Button>
                             )}
                             <Button variant="outline" className="w-full" asChild>
-                              <a href="/docs" target="_blank">
-                                <FileText className="h-4 w-4 mr-2" />
-                                View Documentation
+                              <a href={`${config.apiBaseUrl}/docs`} target="_blank" rel="noopener noreferrer">
+                                <Info className="h-4 w-4 mr-2" />
+                                Documentation
                               </a>
                             </Button>
                           </div>

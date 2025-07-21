@@ -43,6 +43,7 @@ import { Separator } from '../components/ui/separator';
 import { Badge } from '../components/ui/badge';
 import { Progress } from '../components/ui/progress';
 import { useToast } from '../hooks/use-toast';
+import { config } from '../utils/config';
 
 interface Settings {
   enabled: boolean;
@@ -64,7 +65,7 @@ const Options = () => {
     enabled: true,
     notifications: true,
     autoVerify: false,
-    serverUrl: 'http://localhost:5000',
+    serverUrl: config.apiBaseUrl,
     theme: 'system',
     showTimings: true,
     contextMenuEnabled: true,
@@ -99,7 +100,7 @@ const Options = () => {
         enabled: result.enabled ?? true,
         notifications: result.notifications ?? true,
         autoVerify: result.autoVerify ?? false,
-        serverUrl: result.serverUrl ?? 'http://localhost:5000',
+        serverUrl: result.serverUrl ?? config.apiBaseUrl,
         theme: result.theme ?? 'system',
         showTimings: result.showTimings ?? true,
         contextMenuEnabled: result.contextMenuEnabled ?? true,
@@ -198,7 +199,7 @@ const Options = () => {
       enabled: true,
       notifications: true,
       autoVerify: false,
-      serverUrl: 'http://localhost:5000',
+      serverUrl: config.apiBaseUrl,
       theme: 'system',
       showTimings: true,
       contextMenuEnabled: true,

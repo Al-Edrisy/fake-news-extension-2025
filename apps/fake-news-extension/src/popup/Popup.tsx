@@ -36,6 +36,7 @@ import { Badge } from '../components/ui/badge';
 import { Separator } from '../components/ui/separator';
 import { Progress } from '../components/ui/progress';
 import { Switch } from '../components/ui/switch';
+import { config } from '../utils/config';
 
 interface PageInfo {
   title: string;
@@ -369,7 +370,7 @@ const Popup = () => {
 
   const checkServerStatus = async (): Promise<boolean> => {
     try {
-      const response = await fetch('http://localhost:5000/health', {
+      const response = await fetch(`${config.apiBaseUrl}/health`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -397,7 +398,7 @@ const Popup = () => {
         setTimeout(() => reject(new Error('Request timeout - server took too long to respond')), 30000);
       });
 
-      const fetchPromise = fetch('http://localhost:5000/api/claims/verify', {
+      const fetchPromise = fetch(`${config.apiBaseUrl}/api/claims/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ claim: claim.trim() }),
