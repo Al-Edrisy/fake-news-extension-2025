@@ -172,7 +172,7 @@ async function verifyClaimInBackground(claim, tabId) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
     
-    const response = await fetch('http://13.60.241.86:5000/api/claims/verify', {
+    const response = await fetch('https://verinews.space/api/claims/verify', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

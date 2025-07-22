@@ -411,7 +411,7 @@ const Options = () => {
                       id="serverUrl"
                       value={settings.serverUrl}
                       onChange={(e) => handleSettingChange('serverUrl', e.target.value)}
-                      placeholder="http://13.60.241.86:5000"
+                      placeholder="https://verinews.space"
                       className="flex-1"
                     />
                     <Button variant="outline" onClick={copyServerUrl} size="icon">

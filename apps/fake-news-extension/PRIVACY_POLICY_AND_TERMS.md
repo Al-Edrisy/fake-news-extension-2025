@@ -179,8 +179,7 @@ The VeriNews extension requests the following permissions:
 - **scripting**: To inject content scripts dynamically when needed
 
 #### 4.1.2 Host Permissions
-- **http://localhost:5000/***: To connect to the backend API for verification (development)
-- **http://13.60.241.86:5000/***: To connect to the production backend API for verification
+- **https://verinews.space/***: To connect to the production backend API for verification
 
 ### 4.2 Data Processing
 
