@@ -37,7 +37,7 @@ class DeepSeekClient:
 
         raw_response = self.client.chat_completion(
             messages=messages,
-            model="deepseek-ai/DeepSeek-V3-0324",
+            model="deepseek-ai/DeepSeek-V3",
             max_tokens=512,
             temperature=0.8,
         )

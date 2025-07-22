@@ -4,8 +4,6 @@ from sqlalchemy.orm import sessionmaker
 import os
 from dotenv import load_dotenv
 from contextlib import contextmanager
-from sqlalchemy.dialects.postgresql import UUID
-import uuid
 
 load_dotenv()
 

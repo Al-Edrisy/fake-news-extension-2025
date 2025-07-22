@@ -1,0 +1,80 @@
+{
+  "fake_news": [
+    "21stcenturywire.com",
+    "abcnews.com.co",
+    "abeldanger.net",
+    "abovetopsecret.com",
+    "activistpost.com",
+    "adobochronicles.com",
+    "ahtribune.com",
+    "allnewspipeline.com",
+    "americannews.com",
+    "americasfreedomfighters.com",
+    "amren.com",
+    "amtvmedia.com",
+    "awdnews.com",
+    "barenakedislam.com",
+    "clickhole.com",
+    "coasttocoastam.com",
+    "corbettreport.com",
+    "countercurrents.org",
+    "counterpunch.org",
+    "darkmoon.me",
+    "davidduke.com",
+    "davidstockmanscontracorner.com",
+    "davidwolfe.com",
+    "dcclothesline.com",
+    "defenddemocracy.press",
+    "dennismichaellynch.com",
+    "departed.co",
+    "der-postillon.com",
+    "fromthetrenchesworldreport.com",
+    "frontpagemag.com",
+    "galacticconnection.com",
+    "globalresearch.ca",
+    "infowars.com",
+    "intrepidreport.com",
+    "legorafi.fr",
+    "madworldnews.com",
+    "naturalnews.com",
+    "newstarget.com",
+    "presstv.ir",
+    "prisonplanet.com",
+    "projectveritas.com",
+    "returnofkings.com",
+    "shiftfrequency.com",
+    "thedailysheeple.com",
+    "theeconomiccollapseblog.com",
+    "thefreethoughtproject.com",
+    "themindunleashed.com",
+    "theonion.com",
+    "thepeoplescube.com",
+    "therussophile.org",
+    "thesaker.is",
+    "thetruthseeker.co.uk",
+    "theunrealtimes.com",
+    "topinfopost.com",
+    "veteranstoday.com",
+    "voltairenet.org",
+    "washingtonsblog.com",
+    "westernjournalism.com",
+    "whatreallyhappened.com"
+  ]
+}
+
+
+
+// import json
+//
+//# Load the blocklist
+//with open('fake_news_blocklist.json') as f:
+//    blocklist = json.load(f)["fake_news"]
+//
+//# Check if a URL should be blocked
+//url = "https://infowars.com/some-article"
+//domain = url.split("//")[-1].split("/")[0]  # Extract domain
+//
+//if domain in blocklist:
+//    print(f"⚠️ Blocked fake news domain: {domain}")
+//else:
+//    print("✅ Safe to proceed.") *//

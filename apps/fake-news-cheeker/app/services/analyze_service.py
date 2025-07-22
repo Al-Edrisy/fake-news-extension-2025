@@ -48,71 +48,34 @@ Your response MUST be ONLY the following JSON structure, with no extra text, mar
             logger.info(f"[ARABIC] Article Title: {article.get('title', '')}")
             logger.info(f"[ARABIC] Article Content: {article.get('content', '')[:500]}")
         prompt = self._build_analysis_prompt(claim, article)
-        
         try:
-            # Try to get a response from the AI model
             raw_response = self.ai_client.ask(prompt, system_prompt=self.SYSTEM_PROMPT)
-            
-            # Parse the response
-            try:
-                parsed = self.ai_client._parse_response(raw_response, article)
-            except Exception as e:
-                logger.error(f"Error parsing response: {e}")
-                # Create a fallback response based on the article content
-                parsed = self._generate_fallback_analysis(claim, article)
-            
-            # Ensure authoritative field is set
+            parsed = self.ai_client._parse_response(raw_response, article)
             if "authoritative" not in parsed or parsed["authoritative"] is None:
                 authoritative_domains = ["nasa.gov", "who.int", "reuters.com", "apnews.com", "bbc.co.uk"]
                 parsed["authoritative"] = any(domain in article.get("source", "").lower() for domain in authoritative_domains)
-            
             if "nasa.gov" in article.get("source", "").lower():
                 parsed["authoritative"] = True
-                
             logger.info(f"Analyzed {article.get('source')} → support={parsed['support']} conf={parsed['confidence']} auth={parsed.get('authoritative')}")
             return parsed
-            
-        except Exception as e:
-            logger.error(f"AI analysis failed: {e}")
-            # Generate a fallback analysis based on the article content
-            return self._generate_fallback_analysis(claim, article)
-    
-    def _generate_fallback_analysis(self, claim: str, article: Dict) -> Dict:
-        """Generate a fallback analysis when AI fails"""
-        # Check if article title or content contains keywords from the claim
-        claim_words = set(claim.lower().split())
-        article_text = (article.get("title", "") + " " + article.get("content", "")).lower()
-        
-        # Count how many claim words appear in the article
-        matching_words = sum(1 for word in claim_words if word in article_text and len(word) > 3)
-        claim_word_count = len([w for w in claim_words if len(w) > 3])
-        
-        # Determine relevance based on word matching
-        relevance_ratio = matching_words / max(1, claim_word_count)
-        
-        if relevance_ratio > 0.5:
-            # Article seems relevant to the claim
-            support = "Partial"
-            confidence = 60
-            reason = "Based on keyword matching, this article appears to be related to the claim."
-        else:
-            # Article doesn't seem relevant
-            support = "Unknown"
-            confidence = 40
-            reason = "This article doesn't appear to directly address the claim based on keyword analysis."
-        
-        # Check for authoritative sources
-        authoritative_domains = ["nasa.gov", "who.int", "reuters.com", "apnews.com", "bbc.co.uk", "cnn.com", "nytimes.com"]
-        is_authoritative = any(domain in article.get("source", "").lower() for domain in authoritative_domains)
-        
-        return {
-            **article,
-            "relevant": relevance_ratio > 0.3,
-            "support": support,
-            "confidence": confidence,
-            "reason": reason,
-            "authoritative": is_authoritative
-        }
+        except NoJSONInResponseError:
+            # Retry once
+            retry_prompt = (
+                prompt + "\n\nYou MUST return only JSON. No markdown or extra explanation."
+            )
+            try:
+                raw_retry = self.ai_client.ask(retry_prompt, system_prompt=self.SYSTEM_PROMPT)
+                return self.ai_client._parse_response(raw_retry, article)
+            except NoJSONInResponseError:
+                logger.error(f"Failed to parse LLM response for {article.get('url')}")
+                return {
+                    **article,
+                    "relevant": False,
+                    "support": "Unknown",
+                    "confidence": 0,
+                    "reason": "Failed to parse JSON",
+                    "authoritative": False
+                }
 
     def analyze_sources(self, claim: str, articles: List[Dict], max_workers: int = 5) -> List[Dict]:
         with ThreadPoolExecutor(max_workers=max_workers) as executor:

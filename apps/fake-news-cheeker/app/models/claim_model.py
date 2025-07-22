@@ -1,13 +1,12 @@
 from ..database import Base
-from sqlalchemy import Column, String, Float, Text, DateTime, ForeignKey
+from sqlalchemy import Column, String, Float, Text, DateTime
 from sqlalchemy.sql import func
 import uuid
-from sqlalchemy.dialects.postgresql import UUID
 
 class Claim(Base):
     __tablename__ = 'claims'
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     text = Column(Text, nullable=False)
     verdict = Column(String(20), nullable=False)
     confidence = Column(Float, nullable=False)

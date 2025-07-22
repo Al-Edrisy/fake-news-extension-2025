@@ -1,5 +1,10 @@
-huggingface_hub
-openai>=1.0.0
+huggingface_hub==0.25.2
+transformers>=4.40.0
+pandas>=2.2.0
+gradio>=4.29.0
+sentencepiece
+accelerate
+scipy
 numpy
 flask
 httpx[http2]==0.24.1
@@ -11,6 +16,5 @@ psycopg2-binary
 requests
 sqlalchemy
 playwright
+flask[reload]
 langdetect
-lxml[html_clean]
-flask-cors

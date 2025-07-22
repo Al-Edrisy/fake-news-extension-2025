@@ -1,33 +1,27 @@
 version: '3.8'
-
 services:
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: fake-news-cheeker-backend
-    restart: always
-    depends_on:
-      - db
-    env_file:
-      - .env
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/fake_news_db
+    build: .
     ports:
       - "5000:5000"
-
+    volumes:
+      - .:/app
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/verinews
+      # Add other environment variables here if needed
+    depends_on:
+      - db
+    command: flask run --host=0.0.0.0 --port=5000 --reload
   db:
     image: postgres:14
-    container_name: fake-news-cheeker-db
     restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: fake_news_db
+      POSTGRES_DB: verinews
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-
 volumes:
-  pgdata:
+  pgdata: 
