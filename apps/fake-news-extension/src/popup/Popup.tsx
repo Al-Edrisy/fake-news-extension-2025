@@ -705,7 +705,7 @@ const Popup = () => {
                 <Button
                   variant="outline"
                   className="w-full justify-start py-5 rounded-xl hover:shadow-md transition-shadow"
-                  onClick={() => window.open('http://localhost:5173/', '_blank')}
+                  onClick={() => window.open('https://verinews.space/', '_blank')}
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
                   Open Web App

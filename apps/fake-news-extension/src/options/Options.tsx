@@ -411,7 +411,7 @@ const Options = () => {
                       id="serverUrl"
                       value={settings.serverUrl}
                       onChange={(e) => handleSettingChange('serverUrl', e.target.value)}
-                      placeholder="https://verinews.space"
+                      placeholder="https://api.verinews.spac"
                       className="flex-1"
                     />
                     <Button variant="outline" onClick={copyServerUrl} size="icon">
@@ -595,21 +595,21 @@ const Options = () => {
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button variant="outline" size="sm" className="w-full justify-start" asChild>
-                  <a href="http://localhost:5173/" target="_blank" rel="noopener noreferrer">
+                  <a href="https://verinews.space/" target="_blank" rel="noopener noreferrer">
                     <Globe className="w-4 h-4 mr-2" />
                     Open Web App
                     <ExternalLink className="w-3 h-3 ml-auto" />
                   </a>
                 </Button>
                 <Button variant="outline" size="sm" className="w-full justify-start" asChild>
-                  <a href="http://localhost:5173/playground" target="_blank" rel="noopener noreferrer">
+                  <a href="https://verinews.space/playground" target="_blank" rel="noopener noreferrer">
                     <Zap className="w-4 h-4 mr-2" />
                     API Playground
                     <ExternalLink className="w-3 h-3 ml-auto" />
                   </a>
                 </Button>
                 <Button variant="outline" size="sm" className="w-full justify-start" asChild>
-                  <a href="http://localhost:5173/docs" target="_blank" rel="noopener noreferrer">
+                  <a href="https://verinews.space/docs" target="_blank" rel="noopener noreferrer">
                     <Info className="w-4 h-4 mr-2" />
                     Documentation
                     <ExternalLink className="w-3 h-3 ml-auto" />

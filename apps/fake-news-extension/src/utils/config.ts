@@ -1,7 +1,7 @@
 // Environment configuration
 export const config = {
   // API Configuration
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'https://verinews.space',
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'https://api.verinews.space',
   
   // App Configuration
   appName: import.meta.env.VITE_APP_NAME || 'VeriNews',

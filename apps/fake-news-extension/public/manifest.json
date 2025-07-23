@@ -12,7 +12,8 @@
     "tabs"
   ],
   "host_permissions": [
-    "http://localhost:5000/*"
+    "http://localhost:5000/*",
+    "https://api.verinews.space/*"
   ],
   "optional_host_permissions": [
     "http://*/*",

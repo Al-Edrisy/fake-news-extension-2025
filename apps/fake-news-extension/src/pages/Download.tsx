@@ -88,7 +88,7 @@ const Download = () => {
         step: 1,
         title: "Open the Desktop App Page",
         description: "Navigate to the VeriNews desktop app page in your browser",
-        code: "http://localhost:5173/",
+        code: "https://verinews.space/",
         icon: Globe
       },
       {
@@ -125,7 +125,7 @@ const Download = () => {
         step: 2,
         title: "Navigate to VeriNews",
         description: "Go to the VeriNews web application",
-        code: "http://localhost:5173/",
+        code: "https://verinews.space/",
         icon: Link
       },
       {
@@ -414,7 +414,7 @@ const Download = () => {
                           <div className="grid grid-cols-1 gap-2">
                             {platform.id === "pwa" && (
                               <Button className="w-full" asChild>
-                                <a href="http://localhost:5173/" target="_blank">
+                                <a href="https://verinews.space/" target="_blank">
                                   <Globe className="h-4 w-4 mr-2" />
                                   Open Web App
                                 </a>
