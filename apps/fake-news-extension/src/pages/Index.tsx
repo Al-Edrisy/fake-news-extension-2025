@@ -251,24 +251,55 @@ const Index = () => {
 
       {/* Footer */}
       <footer className="border-t border-border bg-surface/50 py-6 px-4">
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <Shield className="h-5 w-5 text-primary" />
-            <span className="text-base font-semibold text-primary-text">VeriNews</span>
-          </div>
-          <p className="text-muted-text text-sm">
-            AI-powered news verification for a more informed world.
-          </p>
-          <div className="mt-3">
-            <Button variant="ghost" className="text-muted-text hover:text-primary-text text-sm" asChild>
-              <a href="https://github.com/Al-Edrisy/fake-news-extension-2025" target="_blank" rel="noopener noreferrer">
-                <Github className="h-3 w-3 mr-2" />
-                Contribute on GitHub
-              </a>
-            </Button>
-          </div>
+      <div className="max-w-6xl mx-auto text-center">
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <Shield className="h-5 w-5 text-primary" />
+          <span className="text-base font-semibold text-primary-text">VeriNews</span>
         </div>
-      </footer>
+
+        <p className="text-muted-text text-sm mb-4">
+          AI-powered news verification for a more informed world.
+        </p>
+
+        <div className="flex flex-wrap justify-center gap-4 mb-2">
+          <Button
+            variant="ghost"
+            className="text-muted-text hover:text-primary-text text-sm"
+            asChild
+          >
+            <a
+              href="https://github.com/Al-Edrisy/fake-news-extension-2025"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Contribute on GitHub"
+            >
+              <Github className="h-4 w-4 mr-2" />
+              Contribute on GitHub
+            </a>
+          </Button>
+
+          <Button
+            variant="ghost"
+            className="text-muted-text hover:text-primary-text text-sm"
+            asChild
+          >
+            <a href="/Policies" aria-label="Privacy Policy">
+              Privacy Policy
+            </a>
+          </Button>
+
+          <Button
+            variant="ghost"
+            className="text-muted-text hover:text-primary-text text-sm"
+            asChild
+          >
+            <a href="/terms" aria-label="Terms of Service">
+              Terms of Service
+            </a>
+          </Button>
+        </div>
+      </div>
+    </footer>
     </div>
   );
 };

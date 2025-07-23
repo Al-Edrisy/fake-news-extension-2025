@@ -6,9 +6,7 @@
  "scripts": {
     "dev": "vite",
     "build": "vite build && npm run postbuild",
-    "build:web": "vite build --config vite.config.web.ts && npm run copy-web-assets",
-    "build:local": "vite build --config vite.config.local.ts && npm run copy-local-assets",
-    "build:dev": "vite build --mode development",
+    "serve": "npm run build && npx serve dist -p 3000",
     "lint": "eslint .",
     "preview": "vite preview",
     "postbuild": "mv dist/src/*.html dist/ && rmdir dist/src || true",
@@ -17,7 +15,6 @@
     "copy-web-assets": "cp public/pwa-manifest.json dist/ && cp public/sw.js dist/ && cp public/icon-*.png dist/ && cp public/favicon.* dist/ && cp public/robots.txt dist/ && cp public/placeholder.svg dist/ && npm run update-pwa-manifest && cp dist/index.html dist/404.html",
     "copy-local-assets": "cp public/pwa-manifest.json dist/ && cp public/sw.js dist/ && cp public/icon-*.png dist/ && cp public/favicon.* dist/ && cp public/robots.txt dist/ && cp public/placeholder.svg dist/",
     "update-pwa-manifest": "sed -i.bak 's|\"/icon|\"/fake-news-web/icon|g; s|\"/favicon|\"/fake-news-web/favicon|g' dist/pwa-manifest.json && rm -f dist/*.bak",
-    "serve": "npm run build:local && npx serve dist -p 3000",
     "predeploy": "npm run build:web",
     "deploy": "gh-pages -d dist"
 

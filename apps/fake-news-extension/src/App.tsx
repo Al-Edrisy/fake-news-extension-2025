@@ -14,6 +14,8 @@ import Playground from "./pages/Playground";
 import NotFound from "./pages/NotFound";
 import PWAInstall from "./components/PWAInstall";
 import Chat from "./pages/Chat";
+import Terms from './pages/Terms';
+import Policies from './pages/PrivacyPolicy';
 
 const queryClient = new QueryClient();
 
@@ -25,6 +27,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+
             <Route path="/" element={<Index />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/docs" element={<Docs />} />
@@ -32,7 +35,8 @@ const App = () => (
             <Route path="/download" element={<Download />} />
             <Route path="/playground" element={<Playground />} />
             <Route path="/chat" element={<Chat />} />
-            
+            <Route path="/Terms" element={<Terms />} />
+            <Route path="/Policies" element={<Policies />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
