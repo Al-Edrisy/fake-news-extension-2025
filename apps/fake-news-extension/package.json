@@ -3,13 +3,13 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
- "scripts": {
+  "scripts": {
     "dev": "vite",
     "build": "vite build && npm run postbuild",
-    "serve": "npm run build && npx serve dist -p 3000",
+    "serve": "npm run build && npx serve dist -s -p 3000",
     "lint": "eslint .",
     "preview": "vite preview",
-    "postbuild": "mv dist/src/*.html dist/ && rmdir dist/src || true",
+    "postbuild": "mv dist/src/*.html dist/ && rmdir dist/src || true && cp dist/index.html dist/404.html",
     "pwa:build": "npm run build && npm run pwa:copy",
     "pwa:copy": "cp public/pwa-manifest.json dist/ && cp public/sw.js dist/ && cp public/icon-*.png dist/",
     "copy-web-assets": "cp public/pwa-manifest.json dist/ && cp public/sw.js dist/ && cp public/icon-*.png dist/ && cp public/favicon.* dist/ && cp public/robots.txt dist/ && cp public/placeholder.svg dist/ && npm run update-pwa-manifest && cp dist/index.html dist/404.html",
@@ -17,7 +17,6 @@
     "update-pwa-manifest": "sed -i.bak 's|\"/icon|\"/fake-news-web/icon|g; s|\"/favicon|\"/fake-news-web/favicon|g' dist/pwa-manifest.json && rm -f dist/*.bak",
     "predeploy": "npm run build:web",
     "deploy": "gh-pages -d dist"
-
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
