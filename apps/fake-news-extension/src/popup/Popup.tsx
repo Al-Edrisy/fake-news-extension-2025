@@ -186,16 +186,18 @@ const VerdictBadge = ({ verdict, confidence }: { verdict: string; confidence: nu
 };
 
 const SourceCard = ({ source }: { source: Source }) => {
-  const getDomainFromUrl = (url: string): string => {
+  const getDomainFromUrl = (url: string | undefined | null): string => {
+    if (!url || typeof url !== 'string') return '';
     try {
       const domain = new URL(url).hostname.replace('www.', '');
       return domain;
     } catch {
-      return url.replace('www.', '').split('/')[0];
+      return url.replace ? url.replace('www.', '').split('/')[0] : '';
     }
   };
 
-  const getFaviconUrl = (url: string): string => {
+  const getFaviconUrl = (url: string | undefined | null): string => {
+    if (!url || typeof url !== 'string') return '';
     try {
       const domain = new URL(url).hostname;
       return `https://www.google.com/s2/favicons?domain=${domain}&sz=16`;
@@ -453,12 +455,13 @@ const Popup = () => {
     }
   };
 
-  const getDomainFromUrl = (url: string): string => {
+  const getDomainFromUrl = (url: string | undefined | null): string => {
+    if (!url || typeof url !== 'string') return '';
     try {
       const domain = new URL(url).hostname.replace('www.', '');
       return domain;
     } catch {
-      return url.replace('www.', '').split('/')[0];
+      return url.replace ? url.replace('www.', '').split('/')[0] : '';
     }
   };
 

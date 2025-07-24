@@ -1,489 +1,447 @@
-// Background service worker for Chrome extension
+// Enhanced Background Service Worker for VeriNews Chrome Extension
+// Key Features: 1) Smart Text Selection, 2) Real-time Verification, 3) Comprehensive Results
+
+// Initialize extension with enhanced settings
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('VeriNews Extension installed');
-  
-  // Set default settings
+  // Enhanced default settings
   chrome.storage.sync.set({
     enabled: true,
-    theme: 'light',
+    theme: 'system', // Auto-detect user preference
     contextMenuEnabled: true,
     soundEnabled: true,
     autoVerify: false,
-    notificationDuration: 10 // seconds
+    notificationDuration: 8,
+    confidenceThreshold: 70, // Only show high-confidence results prominently
+    maxTextLength: 1000, // Prevent overly long text verification
+    cacheResults: true, // Cache verification results for 24h
+    showSources: true,
+    animationsEnabled: true
   });
 
-  // Create context menu
+  // Create enhanced context menu
   chrome.contextMenus.create({
     id: "verifyWithVeriNews",
-    title: "Verify with VeriNews",
-    contexts: ["selection"]
+    title: "🔍 Verify with VeriNews",
+    contexts: ["selection"],
+    documentUrlPatterns: ["http://*/*", "https://*/*"]
+  });
+
+  // Additional context menu for page analysis
+  chrome.contextMenus.create({
+    id: "analyzePageContent",
+    title: "📊 Analyze Page Content",
+    contexts: ["page"],
+    documentUrlPatterns: ["http://*/*", "https://*/*"]
   });
 });
 
-// Set extension icon badge to indicate text selection is available
-chrome.tabs.onActivated.addListener(async (activeInfo) => {
-  try {
-    const tab = await chrome.tabs.get(activeInfo.tabId);
-    if (tab.url && tab.url.startsWith('http')) {
-      // Set badge to indicate text selection is available
-      chrome.action.setBadgeText({ 
-        text: '✓', 
-        tabId: activeInfo.tabId 
-      });
-      chrome.action.setBadgeBackgroundColor({ 
-        color: '#22c55e', 
-        tabId: activeInfo.tabId 
-      });
-    } else {
-      chrome.action.setBadgeText({ 
-        text: '', 
-        tabId: activeInfo.tabId 
-      });
-    }
-  } catch (error) {
-    console.log('Error setting badge:', error);
-  }
-});
-
-// Handle context menu clicks
-chrome.contextMenus.onClicked.addListener(async (info, tab) => {
-  if (info.menuItemId === "verifyWithVeriNews" && info.selectionText) {
-    // Ensure content script is injected before verifying
-    try {
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ['content.js']
-      });
-      
-      // Clear the badge to indicate text selection is now active
-      chrome.action.setBadgeText({ 
-        text: '', 
-        tabId: tab.id 
-      });
-    } catch (error) {
-      console.log('Content script already injected or failed to inject');
-    }
-    
-    // Verify the selected text
-    verifyClaimInBackground(info.selectionText, tab.id);
-  }
-});
-
-// Handle extension icon click - injects content script and enables text selection functionality
+// FEATURE 1: SMART TEXT SELECTION & CONTEXT DETECTION
 chrome.action.onClicked.addListener(async (tab) => {
+  if (!isValidTab(tab)) return;
+  
   try {
-    if (tab.url && tab.url.startsWith('http')) {
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ['content.js']
-      });
-      
-      // Clear the badge to indicate text selection is now active
-      chrome.action.setBadgeText({ 
-        text: '', 
-        tabId: tab.id 
-      });
-      
-      // Send message to show the floating verify button
-      setTimeout(() => {
-        chrome.tabs.sendMessage(tab.id, { action: 'showFloatingButton' });
-      }, 100);
-      
-      console.log('Content script injected and text selection enabled for tab:', tab.id);
-    }
-  } catch (error) {
-    console.log('Error handling extension icon click:', error);
-  }
-});
-
-// Handle messages from content script
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'verifyClaim' && request.claim) {
-    // Verify the claim from content script
-    verifyClaimInBackground(request.claim, sender.tab.id);
-    sendResponse({ success: true });
-  }
-  return true; // Keep the message channel open for async responses
-});
-
-// Helper function to inject content script and send messages
-async function injectContentScriptAndSendMessage(tabId, message, callback = () => {}) {
-  try {
-    const tab = await chrome.tabs.get(tabId);
-    if (!tab || !tab.url || !tab.url.startsWith('http')) {
-      console.log('Tab not suitable for content script injection');
+    const settings = await chrome.storage.sync.get(['enabled', 'animationsEnabled']);
+    if (!settings.enabled) {
+      showNotification('VeriNews is disabled', 'Enable in extension settings');
       return;
     }
 
-    // Inject content script first
-    await chrome.scripting.executeScript({
-      target: { tabId: tabId },
-      files: ['content.js']
+    // Inject enhanced content script with error handling
+    await injectContentScript(tab.id);
+    
+    // Send activation message with settings
+    await sendTabMessage(tab.id, { 
+      action: 'activate', 
+      settings: settings,
+      timestamp: Date.now()
     });
-
-    // Wait a moment for the script to load
-    setTimeout(() => {
-      chrome.tabs.sendMessage(tabId, message, (response) => {
-        if (chrome.runtime.lastError) {
-          console.warn('Content script not available:', chrome.runtime.lastError.message);
-        } else if (callback) {
-          callback(response);
-        }
-      });
-    }, 100);
+    
+    // Show user-friendly activation notice
+    await sendTabMessage(tab.id, { action: 'showActivationNotice' });
+    
   } catch (error) {
-    console.log('Error injecting content script:', error);
+    handleError(error, 'Extension activation failed');
+    showNotification('Activation Error', 'Please reload the page and try again');
+  }
+});
+
+// FEATURE 2: REAL-TIME VERIFICATION WITH CACHING
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+  if (info.menuItemId === "verifyWithVeriNews") {
+    await handleTextVerification(info, tab);
+  } else if (info.menuItemId === "analyzePageContent") {
+    await handlePageAnalysis(tab);
+  }
+});
+
+async function handleTextVerification(info, tab) {
+  if (!info.selectionText || !isValidTab(tab)) return;
+  
+  try {
+    const settings = await getSettings();
+    if (!settings.enabled || !settings.contextMenuEnabled) {
+      showNotification('VeriNews Disabled', 'Enable in extension settings');
+      return;
+    }
+
+    const selectedText = info.selectionText.trim();
+    
+    // Validate text length and content
+    if (!isValidTextForVerification(selectedText, settings.maxTextLength)) {
+      showNotification('Invalid Selection', 'Text too short, long, or contains no meaningful content');
+      return;
+    }
+
+    // Check cache first for performance
+    const cacheKey = generateCacheKey(selectedText);
+    const cachedResult = settings.cacheResults ? await getCachedResult(cacheKey) : null;
+    
+    if (cachedResult && !isResultExpired(cachedResult, 24 * 60 * 60 * 1000)) {
+      await displayVerificationResult(tab.id, cachedResult, selectedText, true);
+      return;
+    }
+
+    // Ensure content script is active
+    const isActive = await pingContentScript(tab.id);
+    if (!isActive) {
+      await injectContentScript(tab.id);
+      await new Promise(resolve => setTimeout(resolve, 100)); // Allow injection time
+    }
+
+    // Start verification process
+    await verifyTextInBackground(selectedText, tab.id, cacheKey);
+    
+  } catch (error) {
+    handleError(error, 'Text verification failed');
+    await sendTabMessage(tab.id, { 
+      action: 'showError', 
+      message: 'Verification failed. Please try again.' 
+    });
   }
 }
 
-// Helper function to safely send messages to content scripts
-function safeSendMessage(tabId, message, callback = () => {}) {
+// FEATURE 3: COMPREHENSIVE RESULTS WITH ENHANCED UI
+async function verifyTextInBackground(text, tabId, cacheKey = null) {
+  const startTime = Date.now();
+  
   try {
-    chrome.tabs.get(tabId, (tab) => {
-      if (chrome.runtime.lastError) {
-        console.log('Tab not found:', chrome.runtime.lastError.message);
-        return;
-      }
-      if (!tab || !tab.url || !tab.url.startsWith('http')) {
-        console.log('Tab not suitable for content script injection');
-        return;
-      }
-      chrome.tabs.sendMessage(tabId, message, (response) => {
-        if (chrome.runtime.lastError) {
-          // Content script not available, inject it first
-          injectContentScriptAndSendMessage(tabId, message, callback);
-        } else if (callback) {
-          callback(response);
-        }
-      });
+    // Show enhanced loading indicator
+    await sendTabMessage(tabId, { 
+      action: 'showLoadingIndicator',
+      text: text.substring(0, 100) + (text.length > 100 ? '...' : ''),
+      startTime: startTime
     });
+
+    // Make API request with timeout and retry logic
+    const result = await makeVerificationRequest(text);
+    
+    // Cache successful results
+    if (cacheKey && result.verdict) {
+      await cacheResult(cacheKey, result);
+    }
+
+    // Display comprehensive results
+    await displayVerificationResult(tabId, result, text, false);
+    
+    // Play notification sound if enabled
+    const settings = await getSettings();
+    if (settings.soundEnabled && result.confidence >= settings.confidenceThreshold) {
+      playNotificationSound();
+    }
+    
   } catch (error) {
-    console.log('Error sending message to content script:', error);
+    await sendTabMessage(tabId, { action: 'hideLoadingIndicator' });
+    
+    if (error.name === 'AbortError') {
+      await sendTabMessage(tabId, { 
+        action: 'showError', 
+        message: 'Verification timed out. The service may be busy.' 
+      });
+    } else {
+      await sendTabMessage(tabId, { 
+        action: 'showError', 
+        message: `Verification failed: ${error.message}` 
+      });
+    }
+    
+    handleError(error, 'Background verification');
   }
 }
 
-// Function to verify claim in background
-async function verifyClaimInBackground(claim, tabId) {
+async function makeVerificationRequest(text) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  
   try {
-    // Show loading indicator first
-    safeSendMessage(tabId, { action: 'showLoadingIndicator' });
-    
-    // Add timeout to prevent hanging
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
-    
-    const response = await fetch('https://verinews.space/api/claims/verify', {
+    const response = await fetch('https://api.verinews.space/api/claims/verify', {
       method: 'POST',
-      headers: {
+      headers: { 
         'Content-Type': 'application/json',
+        'User-Agent': 'VeriNews Extension v1.0'
       },
-      body: JSON.stringify({ claim: claim.trim() }),
+      body: JSON.stringify({ 
+        claim: text,
+        timestamp: Date.now(),
+        source: 'extension'
+      }),
       signal: controller.signal
     });
     
     clearTimeout(timeoutId);
-
-    if (response.ok) {
-      const result = await response.json();
-      
-      // Hide loading indicator
-      safeSendMessage(tabId, { action: 'hideLoadingIndicator' });
-      
-      // Play notification sound if enabled
-      chrome.storage.sync.get(['soundEnabled'], (result) => {
-        if (result.soundEnabled !== false) { // Default to true
-          playNotificationSound();
-        }
-      });
-
-      // Send result to content script
-      safeSendMessage(tabId, {
-        action: 'showVerificationResult',
-        result: result,
-        claim: claim
-      }, (response) => {
-        // If content script is not available, show popup in background
-        if (chrome.runtime.lastError) {
-          showVerificationPopup(result, claim);
-        }
-      });
-      
-    } else {
-      throw new Error(`Server responded with status: ${response.status}`);
+    
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status} ${response.statusText}`);
     }
-  } catch (error) {
-    console.error('Verification failed:', error);
     
-    // Hide loading indicator
-    safeSendMessage(tabId, { action: 'hideLoadingIndicator' });
+    const result = await response.json();
     
-    // Show error message
-    const errorMessage = error.name === 'AbortError' ? 
-      'Verification timed out (30s)' : 
-      error.message || 'Failed to verify claim';
-    
-    safeSendMessage(tabId, {
-      action: 'showVerificationError',
-      error: errorMessage
-    }, (response) => {
-      // If content script is not available, show error popup in background
-      if (chrome.runtime.lastError) {
-        showVerificationPopup({ 
-          verdict: 'Error',
-          confidence: 0,
-          conclusion: errorMessage,
-          sources: []
-        }, claim);
-      }
-    });
-  }
-}
-
-// Play notification sound from extension assets
-function playNotificationSound() {
-  try {
-    // Create audio from extension assets
-    const audio = new Audio(chrome.runtime.getURL('notification.mp3'));
-    audio.volume = 0.6; // Adjust volume
-    audio.play().catch(e => console.log('Sound playback failed:', e));
-  } catch (error) {
-    console.log('Could not play notification sound:', error);
-    // Fallback to Web Audio API
-    fallbackNotificationSound();
-  }
-}
-
-// Fallback notification sound using Web Audio API
-function fallbackNotificationSound() {
-  try {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-    oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
-    
-    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-    
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.2);
-  } catch (error) {
-    console.log('Could not play fallback notification sound:', error);
-  }
-}
-
-// Show verification popup in background page
-function showVerificationPopup(data, claim = '') {
-  // Remove any existing popup
-  const oldPopup = document.getElementById('verinews-popup');
-  if (oldPopup) oldPopup.remove();
-
-  chrome.storage.sync.get(['notificationDuration'], (result) => {
-    const duration = (result.notificationDuration || 10) * 1000;
-
-    // Verdict color/icon
-    const verdictMap = {
-      True: { color: '#22c55e', bg: '#dcfce7', icon: '✔️' },
-      False: { color: '#ef4444', bg: '#fee2e2', icon: '❌' },
-      Partial: { color: '#eab308', bg: '#fef3c7', icon: '🟡' },
-      Uncertain: { color: '#3b82f6', bg: '#dbeafe', icon: '❓' },
-      Unknown: { color: '#64748b', bg: '#f3f4f6', icon: '❓' },
-      Error: { color: '#ef4444', bg: '#fee2e2', icon: '❌' }
-    };
-    const verdict = (data.verdict || 'Unknown');
-    const verdictInfo = verdictMap[verdict] || verdictMap.Unknown;
-
-    // Card container
-    const popup = document.createElement('div');
-    popup.id = 'verinews-popup';
-    popup.setAttribute('role', 'dialog');
-    popup.setAttribute('aria-modal', 'true');
-    popup.tabIndex = 0;
-    popup.style.position = 'fixed';
-    popup.style.bottom = '32px';
-    popup.style.right = '32px';
-    popup.style.zIndex = '99999';
-    popup.style.background = 'hsl(var(--card))';
-    popup.style.border = '1.5px solid hsl(var(--border))';
-    popup.style.borderRadius = '18px';
-    popup.style.boxShadow = '0 8px 32px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10)';
-    popup.style.padding = '0';
-    popup.style.maxWidth = '420px';
-    popup.style.width = '90vw';
-    popup.style.fontFamily = 'system-ui, -apple-system, sans-serif';
-    popup.style.maxHeight = '80vh';
-    popup.style.overflowY = 'auto';
-    popup.style.minWidth = '320px';
-    popup.style.opacity = '0';
-    popup.style.transform = 'translateY(30px)';
-    popup.style.transition = 'opacity 0.3s cubic-bezier(.4,0,.2,1), transform 0.3s cubic-bezier(.4,0,.2,1)';
-
-    // Timings
-    let timingsHtml = '';
-    if (data.timings) {
-      timingsHtml =
-        '<div style="margin-top:18px; padding:12px; background:#f8fafc; border-radius:10px; border:1px solid #e5e7eb;">' +
-          '<div style="font-weight:600; color:hsl(var(--primary-text)); margin-bottom:8px;">Performance Timings</div>' +
-          '<div style="display:flex; gap:12px; font-size:13px; color:hsl(var(--secondary-text));">' +
-            `<span>Analysis: <b>${data.timings.analysis.toFixed(2)}s</b></span>` +
-            `<span>DB: <b>${data.timings.database.toFixed(2)}s</b></span>` +
-            `<span>Scraping: <b>${data.timings.scraping.toFixed(2)}s</b></span>` +
-          '</div>' +
-        '</div>';
+    // Validate API response structure
+    if (!result || typeof result !== 'object') {
+      throw new Error('Invalid response format from verification service');
     }
-
-    // Sources
-    let sourcesHtml = `
-  <div style="margin-top:18px;">
-    <div style="font-weight:600; color:hsl(var(--primary-text)); margin-bottom:8px; display:flex; align-items:center; gap:6px;">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--secondary-text))"><circle cx="12" cy="12" r="10"></circle></svg>
-      Sources (${data.sources.length})
-    </div>
-    <div style="max-height:200px; overflow-y:auto; padding-right:4px;">
-      ${data.sources.map(src => `
-        <div style="margin-bottom:14px; padding:12px; background:#f9fafb; border-radius:8px; border:1px solid #e5e7eb;">
-          <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-            <span style="padding:3px 8px; border-radius:4px; font-size:12px; font-weight:600; background:${src.support==='Support'?'#dcfce7':src.support==='Contradict'?'#fee2e2':src.support==='Partial'?'#fef3c7':'#f3f4f6'}; color:${src.support==='Support'?'#166534':src.support==='Contradict'?'#991b1b':src.support==='Partial'?'#92400e':'#64748b'};">${src.support}</span>
-            <span style="color:hsl(var(--secondary-text)); font-size:12px;">${src.confidence?.toFixed(1) || '0'}%</span>
-            ${src.authoritative ? '<span style="padding:3px 6px; border-radius:4px; font-size:11px; background:#dbeafe; color:#1e40af;">Auth</span>' : ''}
-            <a href="${src.url}" target="_blank" rel="noopener noreferrer" style="margin-left:auto; color:#3b82f6; font-size:12px; text-decoration:underline;">Visit</a>
-          </div>
-          ${src.title ? `<div style="font-weight:600; color:hsl(var(--primary-text)); margin-bottom:2px; font-size:14px;">${src.title}</div>` : ''}
-          ${src.snippet ? `<div style="color:hsl(var(--primary-text)); font-size:13px; margin-bottom:2px;">${src.snippet}</div>` : ''}
-          ${src.reason ? `<div style="color:hsl(var(--secondary-text)); font-size:12px; margin-bottom:2px;">${src.reason}</div>` : ''}
-          ${src.relevant === false ? `<div style="color:#ef4444; font-size:12px;">Irrelevant</div>` : ''}
-        </div>
-      `).join('')}
-    </div>
-  </div>
-`;
-
-    // Copy button
-    const copyBtnHtml = '<button id="copy-verinews-claim" style="padding:6px 12px; background:#f1f5f9; border:1px solid #e5e7eb; border-radius:6px; cursor:pointer; font-size:13px; color:hsl(var(--primary-text)); margin-right:8px;">Copy</button>';
-
-    // Main content
-    popup.innerHTML =
-      `<div style="padding:24px 24px 18px 24px;">
-        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
-          <span style="font-size:1.7rem; background:${verdictInfo.bg}; color:${verdictInfo.color}; border-radius:8px; padding:4px 10px; font-weight:700;">${verdictInfo.icon}</span>
-          <span style="font-size:1.2rem; font-weight:700; color:${verdictInfo.color};">${verdict}</span>
-          <span style="margin-left:auto; font-size:13px; color:hsl(var(--secondary-text));">${data.category ? data.category.charAt(0).toUpperCase() + data.category.slice(1) : ''}</span>
-        </div>
-        <div style="font-size:15px; color:hsl(var(--primary-text)); font-weight:600; margin-bottom:6px;">${data.conclusion || 'No conclusion available'}</div>
-        <div style="margin-bottom:10px; color:hsl(var(--secondary-text)); font-size:13px;">${data.explanation || ''}</div>
-        <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-          <div style="flex:1; height:8px; background:#f1f5f9; border-radius:4px; overflow:hidden;">
-            <div style="height:100%; background:${verdictInfo.color}; width:${Math.round(data.confidence || 0)}%; transition:width 0.7s; border-radius:4px;"></div>
-          </div>
-          <span style="font-size:13px; color:${verdictInfo.color}; font-weight:600; min-width:38px; text-align:right;">${(data.confidence !== undefined && data.confidence !== null) ? Number(data.confidence).toFixed(1) : '0'}%</span>
-        </div>
-        <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-          ${copyBtnHtml}
-          <span style="font-size:12px; color:hsl(var(--secondary-text));">Claim ID: <span style="font-family:monospace;">${data.claim_id || ''}</span></span>
-        </div>
-        ${timingsHtml}
-        ${sourcesHtml}
-        <div style="margin-top:18px; display:flex; justify-content:flex-end;">
-          <button id="close-verinews-popup" style="padding:6px 12px; background:#e2e8f0; border:1px solid #cbd5e1; border-radius:6px; cursor:pointer; font-size:13px; color:hsl(var(--primary-text));">Close</button>
-        </div>
-      </div>`;
-
-    // Copy button logic
-    popup.querySelector('#copy-verinews-claim').onclick = () => {
-      navigator.clipboard.writeText(
-        `Claim: ${claim || ''}\nConclusion: ${data.conclusion || ''}\nExplanation: ${data.explanation || ''}\nConfidence: ${data.confidence || ''}%\nCategory: ${data.category || ''}\nClaim ID: ${data.claim_id || ''}`
-      );
+    
+    // Ensure required fields with defaults
+    return {
+      verdict: result.verdict || 'Uncertain',
+      confidence: Math.min(100, Math.max(0, Number(result.confidence) || 0)),
+      conclusion: result.conclusion || 'No conclusion available',
+      explanation: result.explanation || 'No detailed explanation provided',
+      sources: Array.isArray(result.sources) ? result.sources : [],
+      category: result.category || 'General',
+      claim_id: result.claim_id || generateClaimId(),
+      timings: result.timings || {},
+      timestamp: Date.now()
     };
+    
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
 
-    // Close button logic
-    popup.querySelector('#close-verinews-popup').onclick = () => {
-      popup.style.opacity = '0';
-      popup.style.transform = 'translateY(30px)';
-      setTimeout(() => popup.remove(), 300);
-    };
-
-    // Animate in
-    setTimeout(() => {
-      popup.style.opacity = '1';
-      popup.style.transform = 'translateY(0)';
-      popup.focus();
-    }, 10);
-
-    // Auto-remove after duration
-    setTimeout(() => {
-      if (popup.parentNode) {
-        popup.style.opacity = '0';
-        popup.style.transform = 'translateY(30px)';
-        setTimeout(() => popup.remove(), 300);
-      }
-    }, duration);
+async function displayVerificationResult(tabId, result, originalText, fromCache) {
+  await sendTabMessage(tabId, { action: 'hideLoadingIndicator' });
+  
+  // Enhanced result display with additional metadata
+  const enhancedResult = {
+    ...result,
+    fromCache: fromCache,
+    originalText: originalText,
+    verificationTime: fromCache ? 'Cached' : 'Just verified',
+    qualityScore: calculateQualityScore(result)
+  };
+  
+  await sendTabMessage(tabId, { 
+    action: 'showVerificationResult', 
+    result: enhancedResult, 
+    claim: originalText,
+    displayMode: 'comprehensive'
   });
 }
 
-// Handle messages from other parts of the extension
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log('Background received message:', message, sender);
-  if (message.action === 'showVerificationResult') {
-    showVerificationPopup(message.result, message.claim);
-  }
-  if (message.action === 'showVerificationError') {
-    showVerificationPopup({ 
-      verdict: 'Error',
-      confidence: 0,
-      conclusion: message.error,
-      sources: []
-    });
-  }
-  if (message.action === 'verifyClaim') {
-    verifyClaimInBackground(message.claim, sender.tab ? sender.tab.id : undefined);
-  }
-  sendResponse({ success: true });
-  return true;
-});
+// UTILITY FUNCTIONS
 
-// On every page load, check and request permission for text selection feature
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete' && tab.url && tab.url.startsWith('http')) {
-    const url = new URL(tab.url);
-    const origin = url.origin + '/*';
-    chrome.permissions.contains({origins: [origin]}, (hasPerm) => {
-      if (hasPerm) {
-        // Already have permission, inject content script
-        chrome.scripting.executeScript({
-          target: { tabId: tabId },
-          files: ['content.js']
-        }, () => {
-          console.log('Content script auto-injected for', origin);
-        });
+function isValidTab(tab) {
+  return tab?.id && tab?.url && (tab.url.startsWith('http://') || tab.url.startsWith('https://'));
+}
+
+function isValidTextForVerification(text, maxLength) {
+  if (!text || text.length < 10) return false;
+  if (text.length > maxLength) return false;
+  
+  // Check if text contains meaningful content (not just punctuation/numbers)
+  const meaningfulChars = text.replace(/[^\p{L}\p{N}\s]/gu, '').trim();
+  return meaningfulChars.length >= 5;
+}
+
+async function injectContentScript(tabId) {
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId: tabId },
+      files: ['content.js'],
+      injectImmediately: true
+    });
+  } catch (error) {
+    throw new Error(`Script injection failed: ${error.message}`);
+  }
+}
+
+async function sendTabMessage(tabId, message) {
+  return new Promise((resolve) => {
+    chrome.tabs.sendMessage(tabId, message, (response) => {
+      if (chrome.runtime.lastError) {
+        console.warn('Message send failed:', chrome.runtime.lastError.message);
+        resolve(null);
       } else {
-        // Request permission for this site
-        chrome.permissions.request({origins: [origin]}, (granted) => {
-          if (granted) {
-            chrome.scripting.executeScript({
-              target: { tabId: tabId },
-              files: ['content.js']
-            }, () => {
-              console.log('Content script injected after permission for', origin);
-            });
-          } else {
-            console.log('User denied permission for', origin);
-          }
-        });
+        resolve(response);
       }
     });
+  });
+}
+
+async function pingContentScript(tabId) {
+  return new Promise((resolve) => {
+    chrome.tabs.sendMessage(tabId, { action: 'ping' }, (response) => {
+      resolve(!chrome.runtime.lastError && response?.success);
+    });
+  });
+}
+
+async function getSettings() {
+  return await chrome.storage.sync.get([
+    'enabled', 'contextMenuEnabled', 'soundEnabled', 'maxTextLength',
+    'confidenceThreshold', 'cacheResults', 'animationsEnabled'
+  ]);
+}
+
+function generateCacheKey(text) {
+  // Simple hash function for cache keys
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    const char = text.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
   }
-});
+  return `verify_${Math.abs(hash)}`;
+}
 
-// Handle extension startup
-chrome.runtime.onStartup.addListener(() => {
-  console.log('VeriNews Extension starting up');
-});
+async function getCachedResult(key) {
+  try {
+    const result = await chrome.storage.local.get(key);
+    return result[key] || null;
+  } catch {
+    return null;
+  }
+}
 
-// Handle extension wakeup
-chrome.runtime.onSuspend.addListener(() => {
-  console.log('VeriNews Extension suspending');
+async function cacheResult(key, result) {
+  try {
+    await chrome.storage.local.set({
+      [key]: {
+        ...result,
+        cachedAt: Date.now()
+      }
+    });
+  } catch (error) {
+    console.warn('Failed to cache result:', error);
+  }
+}
+
+function isResultExpired(cachedResult, maxAge) {
+  return !cachedResult.cachedAt || (Date.now() - cachedResult.cachedAt) > maxAge;
+}
+
+function calculateQualityScore(result) {
+  let score = 0;
+  
+  // Base score from confidence
+  score += (result.confidence || 0) * 0.4;
+  
+  // Bonus for having sources
+  if (result.sources && result.sources.length > 0) {
+    score += Math.min(30, result.sources.length * 5);
+  }
+  
+  // Bonus for detailed explanation
+  if (result.explanation && result.explanation.length > 50) {
+    score += 15;
+  }
+  
+  // Bonus for definitive verdict
+  if (result.verdict && ['True', 'False'].includes(result.verdict)) {
+    score += 10;
+  }
+  
+  return Math.min(100, Math.max(0, score));
+}
+
+function generateClaimId() {
+  return 'ext_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+function showNotification(title, message) {
+  if (chrome.notifications) {
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'icon-48.png',
+      title: title,
+      message: message
+    });
+  }
+}
+
+function playNotificationSound() {
+  chrome.storage.sync.get(['soundEnabled'], (result) => {
+    if (result.soundEnabled !== false) {
+      // Send message to content script to play sound
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs[0]) {
+          sendTabMessage(tabs[0].id, { action: 'playCustomSound' });
+        }
+      });
+    }
+  });
+}
+
+function handleError(error, context) {
+  console.error(`${context}:`, error);
+  
+  // Log to extension analytics in production
+  if (typeof chrome !== "undefined" && chrome.runtime) {
+    chrome.storage.local.get(['errorLog'], (result) => {
+      const errorLog = result.errorLog || [];
+      errorLog.push({
+        context: context,
+        error: error.message || error.toString(),
+        timestamp: Date.now(),
+        stack: error.stack
+      });
+      
+      // Keep only last 50 errors
+      if (errorLog.length > 50) {
+        errorLog.splice(0, errorLog.length - 50);
+      }
+      
+      chrome.storage.local.set({ errorLog });
+    });
+  }
+}
+
+// Handle page analysis feature
+async function handlePageAnalysis(tab) {
+  if (!isValidTab(tab)) return;
+  
+  try {
+    const isActive = await pingContentScript(tab.id);
+    if (!isActive) {
+      await injectContentScript(tab.id);
+    }
+    
+    await sendTabMessage(tab.id, { action: 'analyzePageContent' });
+    
+  } catch (error) {
+    handleError(error, 'Page analysis failed');
+    showNotification('Analysis Error', 'Failed to analyze page content');
+  }
+}
+
+// Listen for messages from content script
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'verifyClaim' && sender.tab?.id) {
+    handleTextVerification({ selectionText: message.claim }, sender.tab)
+      .then(() => sendResponse({ success: true }))
+      .catch(error => {
+        handleError(error, 'Message handler verification');
+        sendResponse({ success: false, error: error.message });
+      });
+    return true; // Keep message channel open
+  }
+  
+  if (message.action === 'getSettings') {
+    getSettings()
+      .then(settings => sendResponse({ success: true, settings }))
+      .catch(error => sendResponse({ success: false, error: error.message }));
+    return true;
+  }
+  
+  sendResponse({ success: false, error: 'Unknown action' });
 });

@@ -582,7 +582,19 @@ const Services = () => {
                               <ArrowRight className="h-3 w-3 ml-2 group-hover:translate-x-1 transition-transform" />
                             </a>
                           </Button>
-                    </div>
+                        </div>
+
+                        {/* Quick Actions for Web Search */}
+                        {service.id === "web-search" && (
+                          <div className="mt-6 pt-4 border-t border-border/50">
+                            <Button className="w-full" asChild>
+                              <a href="https://chromewebstore.google.com/detail/verinews/odonindhpfalpcfmnceimmpgcoeanopa?utm_source=item-share-cp" target="_blank" rel="noopener noreferrer">
+                                <Chrome className="h-4 w-4 mr-2" />
+                                Download Chrome Extension
+                              </a>
+                            </Button>
+                          </div>
+                        )}
                   </CardContent>
                 </Card>
               );

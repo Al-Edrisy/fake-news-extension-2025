@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "VeriNews",
-  "version": "1.0.1",
-  "description": "A powerful Chrome extension for news verification and fact-checking built with React and modern web technologies",
+  "version": "1.0.2",
+  "description": "A powerful Chrome extension tool for news verification and fact-checking built with React and modern web technologies",
   "permissions": [
     "activeTab",
     "storage",
@@ -11,11 +11,9 @@
     "tabs"
   ],
   "host_permissions": [
-    "http://localhost:5000/*",
     "https://api.verinews.space/*"
   ],
-  "optional_host_permissions": [
-    "http://*/*",
+  "optional_host_permissions": 
     "https://*/*"
   ],
   "action": {
