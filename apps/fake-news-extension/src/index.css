@@ -326,3 +326,601 @@ All colors MUST be HSL.
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
+/* Chat-specific animations and styles */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes typewriter {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+/* Chat Animation Classes */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-fade-in-slow {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.animate-slide-in-bottom {
+  animation: slideInFromBottom 0.4s ease-out;
+}
+
+.animate-slide-in-left {
+  animation: slideInFromLeft 0.4s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInFromRight 0.4s ease-out;
+}
+
+.animate-typewriter {
+  animation: typewriter 2s steps(40, end);
+}
+
+.animate-blink {
+  animation: blink 1s infinite;
+}
+
+/* Chat Message Styles */
+.chat-message {
+  transition: all 0.2s ease-in-out;
+}
+
+.chat-message:hover {
+  transform: translateY(-1px);
+}
+
+.chat-message.user {
+  animation: slideInFromRight 0.3s ease-out;
+}
+
+.chat-message.ai {
+  animation: slideInFromLeft 0.3s ease-out;
+}
+
+/* Chat Input Styles */
+.chat-input {
+  transition: all 0.2s ease-in-out;
+}
+
+.chat-input:focus {
+  transform: scale(1.01);
+}
+
+/* Source Card Hover Effects */
+.source-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.source-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dark .source-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Verdict Badge Animations */
+.verdict-badge {
+  animation: scaleIn 0.5s ease-out;
+}
+
+/* Tree Visualization Styles */
+.tree-node {
+  transition: all 0.2s ease-in-out;
+}
+
+.tree-node:hover {
+  background-color: hsl(var(--muted));
+}
+
+.tree-branch-indicator {
+  animation: pulse 2s infinite;
+}
+
+/* Loading Dots Animation */
+.loading-dots {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.loading-dots > div {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: hsl(var(--primary));
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.loading-dots > div:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.loading-dots > div:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+/* Glassmorphism Effect */
+.glassmorphic {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .glassmorphic {
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Scroll Animations */
+.scroll-fade-in {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s ease-out;
+}
+
+.scroll-fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Text Selection Styles */
+::selection {
+  background-color: hsl(var(--primary) / 0.2);
+  color: hsl(var(--primary-text));
+}
+
+.dark ::selection {
+  background-color: hsl(var(--primary) / 0.3);
+  color: hsl(var(--primary-text));
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Line Clamp Utilities */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* Focus Styles */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+}
+
+/* Button Hover Effects */
+.btn-hover-scale {
+  transition: transform 0.2s ease-in-out;
+}
+
+.btn-hover-scale:hover {
+  transform: scale(1.05);
+}
+
+.btn-hover-scale:active {
+  transform: scale(0.95);
+}
+
+/* Message Status Indicators */
+.status-pending {
+  color: hsl(var(--warning));
+  animation: pulse 2s infinite;
+}
+
+.status-sent {
+  color: hsl(var(--success));
+}
+
+.status-error {
+  color: hsl(var(--error));
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* Responsive Design Helpers */
+@media (max-width: 768px) {
+  .chat-message {
+    max-width: 90%;
+  }
+  
+  .chat-input {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .chat-message {
+    border: 2px solid hsl(var(--border));
+  }
+  
+  .verdict-badge {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Infinite Carousel Animations */
+@keyframes infiniteScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes infiniteScrollReverse {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-infinite-scroll {
+  animation: infiniteScroll 60s linear infinite;
+}
+
+.animate-infinite-scroll-reverse {
+  animation: infiniteScrollReverse 60s linear infinite;
+}
+
+.animate-infinite-scroll:hover,
+.animate-infinite-scroll-reverse:hover {
+  animation-play-state: paused;
+}
+
+/* Carousel Card Hover Effects */
+.carousel-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.carousel-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.dark .carousel-card:hover {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+}
+
+/* Language Flag Animation */
+.flag-bounce {
+  animation: flagBounce 2s ease-in-out infinite;
+}
+
+@keyframes flagBounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-3px);
+  }
+  60% {
+    transform: translateY(-2px);
+  }
+}
+
+/* Category Badge Glow */
+.category-badge {
+  position: relative;
+  overflow: hidden;
+}
+
+.category-badge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.category-badge:hover::before {
+  left: 100%;
+}
+
+/* Smooth Gradient Overlays */
+.gradient-overlay-left {
+  background: linear-gradient(to right, 
+    hsl(var(--background)) 0%, 
+    hsl(var(--background) / 0.8) 50%, 
+    transparent 100%
+  );
+}
+
+.gradient-overlay-right {
+  background: linear-gradient(to left, 
+    hsl(var(--background)) 0%, 
+    hsl(var(--background) / 0.8) 50%, 
+    transparent 100%
+  );
+}
+
+/* Prompt Card Ripple Effect */
+.prompt-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.prompt-card::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.prompt-card:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* Multilingual Text Support */
+.rtl-text {
+  direction: rtl;
+  text-align: right;
+}
+
+.ltr-text {
+  direction: ltr;
+  text-align: left;
+}
+
+/* Language-specific Font Optimizations */
+.font-arabic {
+  font-family: 'Noto Sans Arabic', 'Arial Unicode MS', sans-serif;
+}
+
+.font-chinese {
+  font-family: 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+}
+
+.font-japanese {
+  font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic Pro', 'Meiryo', sans-serif;
+}
+
+/* Carousel Pause/Play Button */
+.pause-play-btn {
+  transition: all 0.2s ease-in-out;
+}
+
+.pause-play-btn:hover {
+  background-color: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+}
+
+/* Smooth Scroll Behavior */
+.smooth-scroll {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Enhanced Focus States for Accessibility */
+.carousel-card:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+/* Loading State for Carousel */
+.carousel-loading {
+  background: linear-gradient(90deg, 
+    hsl(var(--muted)) 25%, 
+    hsl(var(--muted) / 0.5) 50%, 
+    hsl(var(--muted)) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Responsive Carousel Adjustments */
+@media (max-width: 640px) {
+  .carousel-card {
+    min-width: 280px;
+    max-width: 320px;
+  }
+}
+
+@media (max-width: 480px) {
+  .carousel-card {
+    min-width: 240px;
+    max-width: 280px;
+  }
+}
+
+/* High Performance Scrolling */
+.hardware-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Carousel Container Optimizations */
+.carousel-container {
+  contain: layout style paint;
+  transform: translateZ(0);
+}
+
+/* Smooth Transitions for Theme Changes */
+.theme-transition {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}/* C
+ircular Loading Spinner */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Domain Avatar Styles */
+.domain-avatar {
+  transition: all 0.2s ease-in-out;
+}
+
+.domain-avatar:hover {
+  transform: scale(1.1);
+}
+
+/* Source Card Improvements */
+.source-card-avatar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+}
+
+.dark .source-card-avatar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.source-card-avatar:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.dark .source-card-avatar:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Loading State Improvements */
+.loading-spinner {
+  border-width: 2px;
+  border-style: solid;
+  border-color: hsl(var(--primary));
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Smooth Loading Transitions */
+.loading-container {
+  transition: all 0.3s ease-in-out;
+}
+
+.loading-text {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Favicon Fallback Styles */
+.favicon-fallback {
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+  color: white;
+  font-weight: bold;
+  font-size: 0.75rem;
+}

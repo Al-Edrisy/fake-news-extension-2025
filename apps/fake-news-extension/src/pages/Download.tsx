@@ -430,7 +430,7 @@ const Download = () => {
                             )}
                             {platform.id === "web" && (
                               <Button className="w-full" asChild>
-                                <a href="https://chromewebstore.google.com/detail/verinews/odonindhpfalpcfmnceimmpgcoeanopa?utm_source=item-share-cp" target="_blank" rel="noopener noreferrer">
+                                <a href="https://chromewebstore.google.com/detail/verinews/odonindhpfalpcfmnceimmpgcoeanopa?utm_source=item-share-cb" target="_blank" rel="noopener noreferrer">
                                   <Chrome className="h-4 w-4 mr-2" />
                                   Download Chrome Extension
                                 </a>
@@ -438,10 +438,10 @@ const Download = () => {
                             )}
                             {platform.id === "extension" && (
                               <Button className="w-full" asChild>
-                                <a href="https://chrome.google.com/webstore" target="_blank" rel="noopener noreferrer">
+                                <a href="https://chromewebstore.google.com/detail/verinews/odonindhpfalpcfmnceimmpgcoeanopa?utm_source=item-share-cb" target="_blank" rel="noopener noreferrer">
                                   <Chrome className="h-4 w-4 mr-2" />
                                   <ExternalLink className="h-4 w-4 mr-2" />
-                                  Chrome Web Store
+                                  Install Extension
                                 </a>
                               </Button>
                             )}

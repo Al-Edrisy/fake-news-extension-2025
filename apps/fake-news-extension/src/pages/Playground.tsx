@@ -3,14 +3,14 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Badge } from '../components/ui/badge';
 import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Separator } from '../components/ui/separator';
 import { config } from '../utils/config';
 import Navbar from '../components/Navbar';
-import { BookOpen, Search, Shield, Database, Activity, Globe, FileText, Zap, Plus, X, ExternalLink, ChevronDown, ChevronRight } from 'lucide-react';
+import { BookOpen, Search, Shield, Database, Activity, Globe, FileText, Zap, Plus, X } from 'lucide-react';
+import { ScalableOutputWindow } from '../components/playground/ScalableOutputWindow';
 
 interface ApiResponse {
   status: number;
@@ -34,9 +34,7 @@ interface Parameter {
   value: string;
 }
 
-interface CollapsibleState {
-  [key: string]: boolean;
-}
+
 
 const Playground: React.FC = () => {
   const [method, setMethod] = useState<'GET' | 'POST'>('GET');
@@ -50,8 +48,7 @@ const Playground: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [collapsedSections, setCollapsedSections] = useState<CollapsibleState>({});
-  const [displayMode, setDisplayMode] = useState<'vs-code' | 'light' | 'dark' | 'minimal'>('vs-code');
+
 
   const endpointExamples: EndpointExample[] = [
     // Claims endpoints
@@ -80,13 +77,37 @@ const Playground: React.FC = () => {
       params: 'page=1&limit=10'
     },
     {
-      name: 'Verify Claim',
+      name: 'Verify Climate Change Claim',
       url: `${config.apiBaseUrl}/api/claims/verify`,
       method: 'POST',
-      description: 'Verify a specific claim',
+      description: 'Verify a climate change related claim',
       category: 'Claims',
       body: JSON.stringify({
-        claim: "COVID-19 vaccines cause infertility.",
+        claim: "Electric cars are worse for the environment than gas cars due to battery production.",
+        include_sources: true,
+        detailed_analysis: true
+      }, null, 2)
+    },
+    {
+      name: 'Verify Health Claim',
+      url: `${config.apiBaseUrl}/api/claims/verify`,
+      method: 'POST',
+      description: 'Verify a health-related claim',
+      category: 'Claims',
+      body: JSON.stringify({
+        claim: "Drinking 8 glasses of water daily is necessary for optimal health.",
+        include_sources: true,
+        detailed_analysis: true
+      }, null, 2)
+    },
+    {
+      name: 'Verify Technology Claim',
+      url: `${config.apiBaseUrl}/api/claims/verify`,
+      method: 'POST',
+      description: 'Verify a technology-related claim',
+      category: 'Claims',
+      body: JSON.stringify({
+        claim: "5G technology causes cancer and other health problems.",
         include_sources: true,
         detailed_analysis: true
       }, null, 2)
@@ -103,9 +124,17 @@ const Playground: React.FC = () => {
     },
     {
       name: 'Get Source by Domain',
-      url: `${config.apiBaseUrl}/public/sources/by-domain/example.com`,
+      url: `${config.apiBaseUrl}/public/sources/by-domain/reuters.com`,
       method: 'GET',
       description: 'Get source information by domain',
+      category: 'Sources',
+      params: 'page=1&limit=10'
+    },
+    {
+      name: 'Get BBC Sources',
+      url: `${config.apiBaseUrl}/public/sources/by-domain/bbc.com`,
+      method: 'GET',
+      description: 'Get BBC news sources',
       category: 'Sources',
       params: 'page=1&limit=10'
     },
@@ -128,27 +157,61 @@ const Playground: React.FC = () => {
       params: 'limit=5&page=1'
     },
     {
-      name: 'Analyze Content Directly',
+      name: 'Get Supported Analyses',
+      url: `${config.apiBaseUrl}/public/analyses/supported`,
+      method: 'GET',
+      description: 'Get analyses that support claims',
+      category: 'Analysis',
+      params: 'page=1&limit=10'
+    },
+    {
+      name: 'Analyze Vaccine Content',
       url: `${config.apiBaseUrl}/api/analysis/analyze`,
       method: 'POST',
-      description: 'Send content directly to AI model for analysis',
+      description: 'Analyze vaccine-related content with sources',
       category: 'Analysis',
       body: JSON.stringify({
-        claim: "COVID-19 vaccines cause infertility.",
+        claim: "mRNA vaccines alter human DNA permanently.",
         articles: [
           {
-            title: "COVID-19 vaccines are safe and effective",
-            date: "2024-12-01",
-            source: "reuters",
-            content: "Extensive studies have shown that COVID-19 vaccines do not affect fertility in men or women. Experts confirm the safety of vaccines...",
-            url: "https://www.reuters.com/article/covid-vaccine-safety"
+            title: "How mRNA Vaccines Work - CDC Explanation",
+            date: "2024-01-15",
+            source: "cdc.gov",
+            content: "mRNA vaccines teach our cells how to make a protein that triggers an immune response. The mRNA never enters the cell nucleus where DNA is kept...",
+            url: "https://www.cdc.gov/coronavirus/2019-ncov/vaccines/different-vaccines/mrna.html"
           },
           {
-            title: "Concerns raised over vaccine side effects",
-            date: "2023-11-15",
-            source: "generic",
-            content: "Some reports have alleged vaccine side effects, but no causal link to infertility has been established in scientific research...",
-            url: "https://example.com/vaccine-side-effects"
+            title: "Fact Check: mRNA Vaccines and DNA",
+            date: "2024-02-10",
+            source: "reuters.com",
+            content: "Scientific consensus confirms that mRNA vaccines do not alter human DNA. The mRNA is broken down by the body after use...",
+            url: "https://www.reuters.com/article/uk-factcheck-mrna-dna"
+          }
+        ]
+      }, null, 2)
+    },
+    {
+      name: 'Analyze Climate Content',
+      url: `${config.apiBaseUrl}/api/analysis/analyze`,
+      method: 'POST',
+      description: 'Analyze climate change content with sources',
+      category: 'Analysis',
+      body: JSON.stringify({
+        claim: "Global warming stopped in 1998 and hasn't continued since.",
+        articles: [
+          {
+            title: "Global Temperature Records - NASA",
+            date: "2024-01-20",
+            source: "nasa.gov",
+            content: "NASA data shows that global temperatures have continued to rise since 1998, with the last decade being the warmest on record...",
+            url: "https://climate.nasa.gov/evidence/"
+          },
+          {
+            title: "Climate Change Evidence - NOAA",
+            date: "2024-02-05",
+            source: "noaa.gov",
+            content: "NOAA confirms that global warming has accelerated since 1998, with clear evidence of rising temperatures worldwide...",
+            url: "https://www.climate.gov/news-features/understanding-climate/climate-change-global-temperature"
           }
         ]
       }, null, 2)
@@ -156,14 +219,36 @@ const Playground: React.FC = () => {
     
     // Search endpoints
     {
-      name: 'Web Search',
+      name: 'Search Mars Discovery',
       url: `${config.apiBaseUrl}/api/search/web`,
       method: 'POST',
-      description: 'Search the web using Google engine',
+      description: 'Search for Mars water discovery information',
       category: 'Search',
       body: JSON.stringify({
-        query: "NASA Mars water discovery",
-        max_results: 5
+        query: "NASA Mars water discovery 2024 evidence",
+        max_results: 8
+      }, null, 2)
+    },
+    {
+      name: 'Search AI Technology',
+      url: `${config.apiBaseUrl}/api/search/web`,
+      method: 'POST',
+      description: 'Search for AI technology developments',
+      category: 'Search',
+      body: JSON.stringify({
+        query: "artificial intelligence breakthrough 2024 ChatGPT GPT-4",
+        max_results: 10
+      }, null, 2)
+    },
+    {
+      name: 'Search Renewable Energy',
+      url: `${config.apiBaseUrl}/api/search/web`,
+      method: 'POST',
+      description: 'Search for renewable energy statistics',
+      category: 'Search',
+      body: JSON.stringify({
+        query: "renewable energy statistics 2024 solar wind power",
+        max_results: 6
       }, null, 2)
     },
     
@@ -173,6 +258,13 @@ const Playground: React.FC = () => {
       url: `${config.apiBaseUrl}/health`,
       method: 'GET',
       description: 'Check server health status',
+      category: 'System'
+    },
+    {
+      name: 'System Statistics',
+      url: `${config.apiBaseUrl}/public/stats`,
+      method: 'GET',
+      description: 'Get system statistics and metrics',
       category: 'System'
     }
   ];
@@ -282,186 +374,7 @@ const Playground: React.FC = () => {
     }
   };
 
-  // Get display mode styles
-  const getDisplayStyles = () => {
-    switch (displayMode) {
-      case 'vs-code':
-        return {
-          container: 'bg-[#1e1e1e] border-slate-700',
-          lineNumbers: 'bg-[#252526] text-[#858585] border-slate-700',
-          content: 'text-[#d4d4d4]'
-        };
-      case 'light':
-        return {
-          container: 'bg-white border-slate-200',
-          lineNumbers: 'bg-slate-50 text-slate-500 border-slate-200',
-          content: 'text-slate-900'
-        };
-      case 'dark':
-        return {
-          container: 'bg-slate-900 border-slate-600',
-          lineNumbers: 'bg-slate-800 text-slate-400 border-slate-600',
-          content: 'text-slate-100'
-        };
-      case 'minimal':
-        return {
-          container: 'bg-transparent border-slate-200',
-          lineNumbers: 'bg-transparent text-slate-400 border-slate-200',
-          content: 'text-slate-700'
-        };
-      default:
-        return {
-          container: 'bg-[#1e1e1e] border-slate-700',
-          lineNumbers: 'bg-[#252526] text-[#858585] border-slate-700',
-          content: 'text-[#d4d4d4]'
-        };
-    }
-  };
 
-  // VS Code-style JSON rendering with line numbers and collapsible sections
-  const renderJsonValue = (value: unknown, path: string = '', depth: number = 0): React.ReactNode => {
-    const indent = '  '.repeat(depth);
-    const sectionId = path || 'root';
-    const isCollapsed = collapsedSections[sectionId];
-    const styles = getDisplayStyles();
-    
-    if (value === null) {
-      return <span className="text-[#569cd6]">null</span>;
-    }
-    
-    if (typeof value === 'boolean') {
-      return <span className="text-[#569cd6]">{value.toString()}</span>;
-    }
-    
-    if (typeof value === 'number') {
-      return <span className="text-[#b5cea8]">{value}</span>;
-    }
-    
-    if (typeof value === 'string') {
-      // Check if it's a URL
-      if (value.match(/^https?:\/\/.+/)) {
-        return (
-          <a 
-            href={value} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-[#ce9178] hover:text-[#d7ba7d] underline decoration-dotted flex items-center gap-1 transition-colors"
-          >
-            <span>"{value}"</span>
-            <ExternalLink className="h-3 w-3 opacity-70" />
-          </a>
-        );
-      }
-      
-      // Check if it's a date
-      if (value.match(/^\d{4}-\d{2}-\d{2}/) || value.match(/^\d{4}-\d{2}-\d{2}T/)) {
-        return <span className="text-[#ce9178]">"{value}"</span>;
-      }
-      
-      // Check if it's an email
-      if (value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-        return <span className="text-[#ce9178]">"{value}"</span>;
-      }
-      
-      return <span className="text-[#ce9178]">"{value}"</span>;
-    }
-    
-    if (Array.isArray(value)) {
-      if (value.length === 0) {
-        return <span className="text-[#808080]">[]</span>;
-      }
-      
-      return (
-        <div className="space-y-0">
-          <div className="flex items-center">
-            <button
-              onClick={() => setCollapsedSections(prev => ({ ...prev, [sectionId]: !prev[sectionId] }))}
-              className="mr-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded p-0.5 transition-colors"
-            >
-              {isCollapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-            </button>
-            <span className="text-[#d4d4d4]">[</span>
-            {isCollapsed && <span className="text-[#808080] ml-1">... {value.length} items</span>}
-            {!isCollapsed && <span className="text-[#d4d4d4]">]</span>}
-          </div>
-          
-          {!isCollapsed && (
-            <div className="ml-6 space-y-0">
-              {value.map((item, index) => (
-                <div key={index} className="flex items-start">
-                  <span className="text-[#808080] mr-2 select-none text-xs">{indent}</span>
-                  <div className="flex-1">
-                    {renderJsonValue(item, `${path}[${index}]`, depth + 1)}
-                  </div>
-                  {index < value.length - 1 && <span className="text-[#d4d4d4] ml-1">,</span>}
-                </div>
-              ))}
-            </div>
-          )}
-          
-          {!isCollapsed && <span className="text-[#d4d4d4]">{indent}]</span>}
-        </div>
-      );
-    }
-    
-    if (typeof value === 'object') {
-      const keys = Object.keys(value as object);
-      if (keys.length === 0) {
-        return <span className="text-[#808080]">{'{}'}</span>;
-      }
-      
-      return (
-        <div className="space-y-0">
-          <div className="flex items-center">
-            <button
-              onClick={() => setCollapsedSections(prev => ({ ...prev, [sectionId]: !prev[sectionId] }))}
-              className="mr-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded p-0.5 transition-colors"
-            >
-              {isCollapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-            </button>
-            <span className="text-[#d4d4d4]">{'{'}</span>
-            {isCollapsed && <span className="text-[#808080] ml-1">... {keys.length} properties</span>}
-            {!isCollapsed && <span className="text-[#d4d4d4]">{'}'}</span>}
-          </div>
-          
-          {!isCollapsed && (
-            <div className="ml-6 space-y-0">
-              {keys.map((key, index) => (
-                <div key={key} className="flex items-start">
-                  <span className="text-[#808080] mr-2 select-none text-xs">{indent}</span>
-                  <span className="text-[#9cdcfe]">"{key}"</span>
-                  <span className="text-[#d4d4d4] mx-2">:</span>
-                  <div className="flex-1">
-                    {renderJsonValue((value as Record<string, unknown>)[key], `${path}.${key}`, depth + 1)}
-                  </div>
-                  {index < keys.length - 1 && <span className="text-[#d4d4d4] ml-1">,</span>}
-                </div>
-              ))}
-            </div>
-          )}
-          
-          {!isCollapsed && <span className="text-[#d4d4d4]">{indent}{'}'}</span>}
-        </div>
-      );
-    }
-    
-    return <span className="text-[#d4d4d4]">{String(value)}</span>;
-  };
-
-  // Generate line numbers for the response
-  const generateLineNumbers = (data: unknown): number => {
-    if (typeof data === 'object' && data !== null) {
-      const jsonString = JSON.stringify(data, null, 2);
-      return jsonString.split('\n').length;
-    }
-    return 1;
-  };
-
-  // Get response container styles
-  const getResponseContainerStyles = () => {
-    const styles = getDisplayStyles();
-    return `border rounded-lg overflow-hidden max-h-96 ${styles.container}`;
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -605,99 +518,12 @@ const Playground: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Response */}
-            {response && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    Response
-                    <div className="flex items-center space-x-2">
-                      <Badge variant={response.status >= 200 && response.status < 300 ? "default" : "destructive"}>
-                        {response.status}
-                      </Badge>
-                      <Badge variant="outline">{response.time}ms</Badge>
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-2">
-                      <Label htmlFor="display-mode">Display Mode:</Label>
-                      <Select value={displayMode} onValueChange={(value: 'vs-code' | 'light' | 'dark' | 'minimal') => setDisplayMode(value)}>
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="vs-code">VS Code</SelectItem>
-                          <SelectItem value="light">Light</SelectItem>
-                          <SelectItem value="dark">Dark</SelectItem>
-                          <SelectItem value="minimal">Minimal</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  <Tabs defaultValue="response" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="response">Response Data</TabsTrigger>
-                      <TabsTrigger value="headers">Headers</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="response" className="mt-4">
-                      <div className={getResponseContainerStyles()}>
-                        <div className="flex h-96">
-                          {/* Line Numbers */}
-                          <div className={`text-xs font-mono px-3 py-4 select-none border-r ${getDisplayStyles().lineNumbers}`}>
-                            {Array.from({ length: generateLineNumbers(response.data) }, (_, i) => (
-                              <div key={i + 1} className="text-right">
-                                {i + 1}
-                              </div>
-                            ))}
-                          </div>
-                          {/* JSON Content */}
-                          <div className="flex-1 p-4 overflow-auto">
-                            <div className="font-mono text-sm leading-relaxed">
-                              {renderJsonValue(response.data)}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </TabsContent>
-                    <TabsContent value="headers" className="mt-4">
-                      <div className={getResponseContainerStyles()}>
-                        <div className="flex h-96">
-                          {/* Line Numbers */}
-                          <div className={`text-xs font-mono px-3 py-4 select-none border-r ${getDisplayStyles().lineNumbers}`}>
-                            {Array.from({ length: generateLineNumbers(response.headers) }, (_, i) => (
-                              <div key={i + 1} className="text-right">
-                                {i + 1}
-                              </div>
-                            ))}
-                          </div>
-                          {/* JSON Content */}
-                          <div className="flex-1 p-4 overflow-auto">
-                            <div className="font-mono text-sm leading-relaxed">
-                              {renderJsonValue(response.headers)}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </TabsContent>
-                  </Tabs>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Error Display */}
-            {error && (
-              <Card className="border-destructive">
-                <CardHeader>
-                  <CardTitle className="text-destructive">Error</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-destructive font-mono text-sm">{error}</p>
-                </CardContent>
-              </Card>
-            )}
+            {/* Scalable Output Window */}
+            <ScalableOutputWindow 
+              response={response}
+              error={error}
+              loading={loading}
+            />
           </div>
 
           {/* Examples Sidebar */}

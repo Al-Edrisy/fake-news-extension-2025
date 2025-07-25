@@ -24,9 +24,11 @@ const Index = () => {
             VeriNews is a powerful tool that uses advanced AI to fact-check news claims in real-time, helping you navigate the information landscape with confidence.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-            <Button className="bg-primary hover:bg-secondary text-white px-6 py-2.5 text-base">
-              <Download className="h-4 w-4 mr-2" />
-              Install Extension
+            <Button className="bg-primary hover:bg-secondary text-white px-6 py-2.5 text-base" asChild>
+              <a href="https://chromewebstore.google.com/detail/verinews/odonindhpfalpcfmnceimmpgcoeanopa?utm_source=item-share-cb" target="_blank" rel="noopener noreferrer">
+                <Download className="h-4 w-4 mr-2" />
+                Install Extension
+              </a>
             </Button>
             <Button variant="outline" className="border-border px-6 py-2.5 text-base" asChild>
               <a href="https://github.com/Al-Edrisy/fake-news-extension-2025" target="_blank" rel="noopener noreferrer">
@@ -84,6 +86,28 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Extension Available Banner */}
+      <section className="py-8 px-4 sm:px-6 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 bg-green-100 dark:bg-green-900/30 px-4 py-2 rounded-full text-green-700 dark:text-green-300 font-medium text-sm mb-4">
+            <CheckCircle className="h-4 w-4" />
+            Now Available on Chrome Web Store
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-primary-text mb-4">
+            VeriNews Extension is Live!
+          </h2>
+          <p className="text-lg text-muted-text mb-6 max-w-2xl mx-auto">
+            Our Chrome extension is now officially available on the Chrome Web Store. Install it with one click and start fact-checking news in real-time.
+          </p>
+          <Button className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg" asChild>
+            <a href="https://chromewebstore.google.com/detail/verinews/odonindhpfalpcfmnceimmpgcoeanopa?utm_source=item-share-cb" target="_blank" rel="noopener noreferrer">
+              <Download className="h-5 w-5 mr-2" />
+              Install from Chrome Web Store
+            </a>
+          </Button>
+        </div>
+      </section>
+
       {/* Platform Options */}
       <section className="py-10 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto">
@@ -111,9 +135,11 @@ const Index = () => {
                   <CheckCircle className="h-4 w-4 text-green-500" />
                   <span className="text-sm text-muted-text">Cross-platform compatibility</span>
                 </div>
-                <Button className="w-full mt-4">
-                  <Download className="h-4 w-4 mr-2" />
-                  Install Extension
+                <Button className="w-full mt-4" asChild>
+                  <a href="https://chromewebstore.google.com/detail/verinews/odonindhpfalpcfmnceimmpgcoeanopa?utm_source=item-share-cb" target="_blank" rel="noopener noreferrer">
+                    <Download className="h-4 w-4 mr-2" />
+                    Install Extension
+                  </a>
                 </Button>
               </CardContent>
             </Card>
@@ -235,9 +261,11 @@ const Index = () => {
             Join thousands of users who trust VeriNews to help them navigate the complex world of online information.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-            <Button className="bg-primary hover:bg-secondary text-white px-6 py-2.5 text-base">
-              <Download className="h-4 w-4 mr-2" />
-              Get VeriNews Now
+            <Button className="bg-primary hover:bg-secondary text-white px-6 py-2.5 text-base" asChild>
+              <a href="https://chromewebstore.google.com/detail/verinews/odonindhpfalpcfmnceimmpgcoeanopa?utm_source=item-share-cb" target="_blank" rel="noopener noreferrer">
+                <Download className="h-4 w-4 mr-2" />
+                Get VeriNews Now
+              </a>
             </Button>
             <Button variant="outline" className="border-border px-6 py-2.5 text-base" asChild>
               <a href="https://github.com/Al-Edrisy/fake-news-extension-2025" target="_blank" rel="noopener noreferrer">
