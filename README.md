@@ -1,135 +1,240 @@
-# Turborepo starter
 
-This Turborepo starter is maintained by the Turborepo core team.
+# VeriNews – AI-Powered Fake News Detection
 
-## Using this example
+![License](https://img.shields.io/badge/license-MIT-green)
+![Python](https://img.shields.io/badge/Python-3.9%2B-blue)
+![Node.js](https://img.shields.io/badge/Node.js-18%2B-brightgreen)
+![HuggingFace](https://img.shields.io/badge/Models-HuggingFace-yellow)
+![Build](https://img.shields.io/github/actions/workflow/status/Al-Edrisy/fake-news-extension-2025/ci.yml?label=build)
 
-Run the following command:
+VeriNews is a **multi-platform AI solution** for detecting and flagging misinformation in real-time.  
+It includes:
+- **Backend Fake News Checker** (Python + Flask + Hugging Face Transformers)
+- **Web & PWA** (React + Vite + TailwindCSS)
+- **Browser Extension & Desktop App** (Electron + Chrome Extension Manifest V3)
 
-```sh
-npx create-turbo@latest
+---
+
+## 📑 Table of Contents
+1. [Overview + Structure](#overview--structure)
+2. [Frontend](#frontend)
+   - [Requirements](#frontend-requirements)
+   - [Setup](#frontend-setup)
+   - [Features](#frontend-features)
+3. [Backend](#backend)
+   - [Requirements](#backend-requirements)
+   - [Setup](#backend-setup)
+   - [Endpoints](#backend-endpoints)
+   - [Response Format](#backend-response-format)
+   - [Features](#backend-features)
+   - [Structure + Architecture](#backend-structure--architecture)
+
+---
+
+## 1. Overview + Structure
+
+VeriNews is built as a **monorepo** with multiple apps and shared packages.
+
+**Repository Structure:**
 ```
 
-## What's inside?
+.
+├── apps/
+│   └── fake-news-cheeker/   # Backend API & AI model logic
+├── fake-news-extension/     # Web, PWA, and Extension code
+├── data/                    # Datasets & model files
+├── packages/                # Shared utilities
+├── docker-compose.yml       # Multi-service deployment
+├── turbo.json               # Monorepo build config
+└── render.yaml              # Deployment config
 
-This Turborepo includes the following packages/apps:
+````
 
-### Apps and Packages
+---
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+## 2. Frontend
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+### Frontend Requirements
+- Node.js ≥ 18
+- npm or bun
+- Modern browser (for PWA support)
 
-### Utilities
+### Frontend Setup
+```bash
+cd fake-news-extension
+npm install
+npm run dev
+````
 
-This Turborepo has some additional tools already setup for you:
+To build the PWA:
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+```bash
+npm run build
+npm run pwa:copy
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+### Frontend Features
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+* Responsive UI with **shadcn/ui** & **Radix UI**
+* Dark/Light mode support (`next-themes`)
+* Offline PWA (Service Worker + Manifest)
+* API integration with backend checker
+* Probability-based results display
+* Charts via **Recharts**
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+---
 
-### Develop
+## 3. Backend
 
-To develop all apps and packages, run the following command:
+### Backend Requirements
 
-```
-cd my-turborepo
+* Python ≥ 3.9
+* PostgreSQL
+* Hugging Face account (if required for model download)
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+**Dependencies (`requirements.txt`):**
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+```txt
+huggingface_hub==0.25.2
+transformers>=4.40.0
+pandas>=2.2.0
+gradio>=4.29.0
+sentencepiece
+accelerate
+scipy
+numpy
+flask
+httpx[http2]==0.24.1
+selectolax==0.3.12
+beautifulsoup4==4.12.2
+readability-lxml==0.8.1
+python-dotenv==1.0.0
+psycopg2-binary
+requests
+sqlalchemy
+playwright
+flask[reload]
+langdetect
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+### Backend Setup
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
+```bash
+cd apps/fake-news-cheeker
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+flask run --reload
 ```
 
-## Useful Links
+**Environment variables (`.env`):**
 
-Learn more about the power of Turborepo:
+```env
+DATABASE_URL=postgresql://user:password@localhost:5432/verinews
+HF_TOKEN=your_huggingface_token
+```
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+---
+
+### Backend Endpoints
+
+#### **1. Check News Content**
+
+**POST** `/check`
+
+```json
+{
+  "text": "Example news content..."
+}
+```
+
+Response:
+
+```json
+{
+  "label": "FAKE",
+  "confidence": 0.92,
+  "details": {
+    "source": "AI Model XYZ",
+    "timestamp": "2025-08-15T12:00:00Z"
+  }
+}
+```
+
+#### **2. Check URL**
+
+**POST** `/check-url`
+
+```json
+{
+  "url": "https://newswebsite.com/article"
+}
+```
+
+Response:
+
+```json
+{
+  "label": "REAL",
+  "confidence": 0.88,
+  "content_snippet": "Extracted article text..."
+}
+```
+
+---
+
+### Backend Response Format
+
+* **label** → `"REAL"` or `"FAKE"`
+* **confidence** → Float (0 to 1)
+* **details** → Classification metadata
+* **content\_snippet** → Optional, article preview
+
+---
+
+### Backend Features
+
+* Hugging Face Transformer model integration
+* Multi-language detection with `langdetect`
+* Web scraping via Playwright, BeautifulSoup, Selectolax
+* PostgreSQL result logging
+* Docker-ready deployment
+
+---
+
+### Backend Structure + Architecture
+
+```
+apps/fake-news-cheeker/
+├── main.py          # Flask entry point
+├── models/          # Model loading & inference logic
+├── utils/           # Helper functions (scraping, cleaning, etc.)
+├── services/        # DB & external integrations
+├── requirements.txt
+├── tests/           # Unit tests
+└── Dockerfile
+```
+
+**Flow:**
+
+1. Client sends request → Backend receives input
+2. Text cleaning → Language detection
+3. AI model inference → Confidence calculation
+4. Result stored in database
+5. Response returned to client
+
+---
+
+## 📜 License
+
+This project is licensed under the [MIT License](LICENSE).
+
+---
+
+## 📧 Contact
+
+**Author:** Al-Edrisy
+**GitHub:** [Al-Edrisy](https://github.com/Al-Edrisy)
+**Website:** [verinews.space](https://verinews.space)
+
+```
